@@ -6,6 +6,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import BackButton from '../components/BackButton';
 import { supabase } from '../services/supabaseClient'; // Importar o cliente do Supabase
 import CustomAlert from '../components/CustomAlert'; // Certifique-se de que o caminho está correto
+import {userAuth} from '../contexts/userContext';
 
 const { width } = Dimensions.get('window');
 
@@ -16,6 +17,8 @@ const LoginScreen = ({ navigation }) => {
   const [footerBottom, setFooterBottom] = useState(new Animated.Value(20));
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
+
+  const {setUserId} = userAuth();
 
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
@@ -47,7 +50,7 @@ const LoginScreen = ({ navigation }) => {
       return;
     }
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error, data } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       console.log(error);
       let errorMessage = 'Ocorreu um erro. Por favor, tente novamente.';
@@ -65,6 +68,9 @@ const LoginScreen = ({ navigation }) => {
       setAlertMessage(errorMessage);
       setAlertVisible(true);
     } else {
+      let userId = data.user.id;
+      console.log('Usuário logado:', userId);
+      setUserId(userId);
       navigation.navigate('HomeTabs');
     }
   };
@@ -78,9 +84,7 @@ const LoginScreen = ({ navigation }) => {
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View style={{ flex: 1 }}>
             <AuthScreenLayout title="Login" logoSource={require('../../assets/logo.png')}>
-              {/* Botão de Voltar */}
               <BackButton />
-              {/* Campo de Email */}
               <View style={styles.inputContainer}>
                 <TextInput
                   style={styles.input}

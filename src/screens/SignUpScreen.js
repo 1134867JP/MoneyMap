@@ -4,9 +4,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import BackButton from '../components/BackButton';
 import ImagePickerComponent from '../components/ImagePickerComponent';
 import SignUpForm from '../components/SignUpForm';
-import * as ImagePicker from 'expo-image-picker'; // Certifique-se de importar ImagePicker
+import * as ImagePicker from 'expo-image-picker';
 
-const { width } = Dimensions.get('window'); // Defina a variável width corretamente
+const { width } = Dimensions.get('window');
 
 const SignUpScreen = ({ navigation }) => {
   const [profileImage, setProfileImage] = useState(null);

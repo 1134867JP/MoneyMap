@@ -3,10 +3,10 @@ import { View, TextInput, TouchableOpacity, Text, StyleSheet, Dimensions, Alert,
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import CustomButton from './CustomButton';
-import { validateForm, uploadImage } from '../services/helpers';
-import { supabase } from '../services/supabaseClient';
+import { validateForm } from '../services/helpers';
+import { signUpUser } from '../services/userService';
 
-const { width } = Dimensions.get('window'); // Defina a variável width corretamente
+const { width } = Dimensions.get('window');
 
 const SignUpForm = ({ navigation, profileImage }) => {
   const [username, setUsername] = useState('');
@@ -43,31 +43,10 @@ const SignUpForm = ({ navigation, profileImage }) => {
 
     if (valid) {
       try {
-        const profileImageUrl = await uploadImage(profileImage, username);
+        const signUpData = await signUpUser(email, password, username, fullName, birthdate, profileImage);
 
-        const response = await fetch('http://localhost:3000/signup', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email,
-            password,
-            username,
-            fullName,
-            birthdate,
-            profileImage: profileImageUrl, // Enviar a URL da imagem ou null
-          }),
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-          Alert.alert('Sucesso', 'Conta criada com sucesso!');
-          navigation.navigate('Login');
-        } else {
-          Alert.alert('Erro', data.error);
-        }
+        Alert.alert('Sucesso', 'Conta criada com sucesso!');
+        navigation.navigate('Login');
       } catch (error) {
         console.log(error);
         Alert.alert('Erro', 'Ocorreu um erro. Por favor, tente novamente.');
@@ -78,11 +57,11 @@ const SignUpForm = ({ navigation, profileImage }) => {
   const handleDateChange = (event, selectedDate) => {
     if (selectedDate) {
       const currentDate = selectedDate || new Date();
-      setShowDatePicker(false); // Fechar o DateTimePicker após a seleção
-      setBirthdate(currentDate.toLocaleDateString('pt-BR')); // Formate a data para o formato desejado
+      setShowDatePicker(false);
+      setBirthdate(currentDate.toLocaleDateString('pt-BR'));
       setBirthdateError('');
     } else {
-      setShowDatePicker(false); // Fechar o DateTimePicker se a seleção for cancelada
+      setShowDatePicker(false);
     }
   };
 
@@ -232,11 +211,11 @@ const SignUpForm = ({ navigation, profileImage }) => {
         />
       )}
       <CustomButton
-          label="Finalizar"
-          onPress={handleSignUp}
-          gradientColors={['#FFFFFF', '#FFFFFF']}
-          textColor="#4960F9"
-          iconColor="#4960F9"
+        label="Finalizar"
+        onPress={handleSignUp}
+        gradientColors={['#FFFFFF', '#FFFFFF']}
+        textColor="#4960F9"
+        iconColor="#4960F9"
       />
     </View>
   );
@@ -290,5 +269,9 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#fff',
     fontSize: 16,
+  },
+  imagePickerText: {
+    color: 'blue',
+    marginBottom: 20,
   },
 });
