@@ -189,6 +189,12 @@ const styles = StyleSheet.create({
   },
   button: {
     marginBottom: 20,
+    paddingVertical: 8, // Reduced padding
+    paddingHorizontal: 16, // Reduced padding
+    borderRadius: 5,
+  },
+  buttonText: {
+    fontSize: 12, // Reduced font size
   },
 });
 

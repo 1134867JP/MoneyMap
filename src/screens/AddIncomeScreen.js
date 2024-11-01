@@ -17,13 +17,13 @@ import BackButton from '../components/BackButton';
 
 const { width } = Dimensions.get('window');
 
-const AddExpenseScreen = ({ navigation }) => {
+const AddIncomeScreen = ({ navigation }) => {
   const [name, setName] = useState('@Exemplo_teste');
   const [category, setCategory] = useState('');
   const [amount, setAmount] = useState('R$0,00');
-  const [expenseDate, setExpenseDate] = useState(new Date('2000-12-20'));
+  const [incomeDate, setIncomeDate] = useState(new Date('2000-12-20'));
   const [validityDate, setValidityDate] = useState(new Date('2001-12-20'));
-  const [showExpenseDatePicker, setShowExpenseDatePicker] = useState(false);
+  const [showIncomeDatePicker, setShowIncomeDatePicker] = useState(false);
   const [showValidityDatePicker, setShowValidityDatePicker] = useState(false);
 
   return (
@@ -38,7 +38,7 @@ const AddExpenseScreen = ({ navigation }) => {
         <BackButton/>
         <ScrollView style={styles.formContainer}>
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Nome da Despesa*</Text>
+            <Text style={styles.label}>Nome da Receita*</Text>
             <TextInput
               style={styles.input}
               value={name}
@@ -73,11 +73,11 @@ const AddExpenseScreen = ({ navigation }) => {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Data da Despesa*</Text>
-            <TouchableOpacity onPress={() => setShowExpenseDatePicker(true)}>
+            <Text style={styles.label}>Data da Receita*</Text>
+            <TouchableOpacity onPress={() => setShowIncomeDatePicker(true)}>
               <TextInput
                 style={styles.input}
-                value={expenseDate.toLocaleDateString()}
+                value={incomeDate.toLocaleDateString()}
                 editable={false}
                 placeholderTextColor="#FFFFFF"
               />
@@ -94,14 +94,14 @@ const AddExpenseScreen = ({ navigation }) => {
           />
         </ScrollView>
 
-        {showExpenseDatePicker && (
+        {showIncomeDatePicker && (
           <DateTimePicker
-            value={expenseDate}
+            value={incomeDate}
             mode="date"
             display="default"
             onChange={(event, selectedDate) => {
-              setShowExpenseDatePicker(false);
-              if (selectedDate) setExpenseDate(selectedDate);
+              setShowIncomeDatePicker(false);
+              if (selectedDate) setIncomeDate(selectedDate);
             }}
           />
         )}
@@ -166,9 +166,15 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
   button: {
-    marginTop: 250,
+    marginTop: 100, // Further reduced margin
     marginBottom: 20,
+    paddingVertical: 8, // Reduced padding
+    paddingHorizontal: 16, // Reduced padding
+    borderRadius: 5,
+  },
+  buttonText: {
+    fontSize: 12, // Reduced font size
   },
 });
 
-export default AddExpenseScreen;
+export default AddIncomeScreen;

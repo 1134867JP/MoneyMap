@@ -121,7 +121,10 @@ const styles = StyleSheet.create({
   },
   button: {
     marginVertical: 10,
-    width: 315,
-    height: 72,
+    width: 240, // Further reduced width
+    height: 50, // Further reduced height
+  },
+  buttonText: {
+    fontSize: 12, // Reduced font size
   },
 });

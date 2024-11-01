@@ -118,11 +118,11 @@ const IncomeStatementScreen = ({ navigation }) => {
                 data={filteredModalTransactions}
                 keyExtractor={item => item.id}
                 renderItem={({ item }) => (
-                  <View style={styles.expenseItem}>
-                    <View style={styles.expenseIconContainer}>
+                  <View style={styles.incomeItem}>
+                    <View style={styles.incomeIconContainer}>
                       <LinearGradient
                         colors={getGradientColors(item.category)}
-                        style={styles.expenseIcon}
+                        style={styles.incomeIcon}
                       >
                         <Icon 
                           name={getCategoryIcon(item.category)} 
@@ -131,15 +131,15 @@ const IncomeStatementScreen = ({ navigation }) => {
                         />
                       </LinearGradient>
                     </View>
-                    <View style={styles.expenseDetails}>
-                      <Text style={styles.expenseCategory}>{item.category}</Text>
-                      <Text style={styles.expenseDate}>{item.date}</Text>
+                    <View style={styles.incomeDetails}>
+                      <Text style={styles.incomeCategory}>{item.category}</Text>
+                      <Text style={styles.incomeDate}>{item.date}</Text>
                     </View>
-                    <Text style={styles.expenseAmount}>R${Math.abs(item.amount).toFixed(2)}</Text>
+                    <Text style={styles.incomeAmount}>R${Math.abs(item.amount).toFixed(2)}</Text>
                   </View>
                 )}
-                style={styles.expenseList}
-                contentContainerStyle={styles.expenseListContent}
+                style={styles.incomeList}
+                contentContainerStyle={styles.incomeListContent}
               />
             </KeyboardAvoidingView>
           ) : (
@@ -334,15 +334,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginLeft: 10,
   },
-  expenseList: {
+  incomeList: {
     flex: 1,
     marginBottom: 20,
   },
-  expenseListContent: {
+  incomeListContent: {
     paddingHorizontal: 5,
     paddingBottom: 20,
   },
-  expenseItem: {
+  incomeItem: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 10,
@@ -350,7 +350,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#E5E5E5',
   },
-  expenseIconContainer: {
+  incomeIconContainer: {
     justifyContent: 'center',
     alignItems: 'center',
     width: 40,
@@ -358,27 +358,27 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginRight: 10,
   },
-  expenseIcon: {
+  incomeIcon: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 10,
     paddingVertical: 10,
   },
-  expenseDetails: {
+  incomeDetails: {
     flex: 1,
     justifyContent: 'center',
   },
-  expenseCategory: {
+  incomeCategory: {
     fontSize: 16,
     color: '#3A3A3A',
   },
-  expenseDate: {
+  incomeDate: {
     fontSize: 14,
     color: '#9B9B9B',
     marginTop: 5,
   },
-  expenseAmount: {
+  incomeAmount: {
     fontSize: 16,
     color: '#FFCF87',
     fontWeight: 'bold',

@@ -77,4 +77,12 @@ const styles = StyleSheet.create({
     borderRadius: 36,
     transform: [{ rotate: '57deg' }],
   },
+  button: {
+    paddingVertical: 8, // Reduced padding
+    paddingHorizontal: 16, // Reduced padding
+    borderRadius: 5,
+  },
+  buttonText: {
+    fontSize: 12, // Reduced font size
+  },
 });

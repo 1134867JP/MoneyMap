@@ -60,7 +60,6 @@ const LaunchScreen = ({ navigation }) => {
           <CustomButton
             label="Já tenho conta"
             onPress={() => navigation.navigate('Login')}
-            style={styles.button}
           />
           <CustomButton
             label="Crie sua conta"
@@ -109,8 +108,6 @@ const styles = StyleSheet.create({
     bottom: 0,
   },
   button: {
-    marginVertical: 10,
-    width: 315,
-    height: 72,
+    marginBottom: 20,
   },
 });

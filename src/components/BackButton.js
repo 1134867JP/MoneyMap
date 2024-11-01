@@ -3,12 +3,12 @@ import { TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 
-const BackButton = () => {
+const BackButton = ({ color = 'white' }) => {
   const navigation = useNavigation();
 
   return (
     <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-      <Ionicons name="arrow-back" size={24} color="white" />
+      <Ionicons name="arrow-back" size={24} color={color} />
     </TouchableOpacity>
   );
 };

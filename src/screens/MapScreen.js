@@ -3,6 +3,7 @@ import { View, StyleSheet, Text } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import CustomTabBar from '../components/CustomTabBar'; // Ajuste o caminho conforme necessário
+import BackButton from '../components/BackButton';
 
 const MapScreen = ({ navigation }) => {
   const [location, setLocation] = useState(null);
@@ -34,6 +35,7 @@ const MapScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
+      <BackButton color="black" />
       <MapView
         style={styles.map}
         initialRegion={{

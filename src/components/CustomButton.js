@@ -9,7 +9,7 @@ const CustomButton = ({
   label,
   onPress,
   width = defaultWidth * 0.85,
-  height = 72,
+  height = 50,
   style,
   gradientColors = ['#4960F9', '#4033FF'],
   textColor = '#FFF',
@@ -64,14 +64,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     height: '100%',
     borderRadius: 30,  // Garantindo que o gradiente também tenha o borderRadius
-    shadowColor: '#1B39FF',
-    shadowOffset: { width: 8, height: 0 },
-    shadowOpacity: 0.2,
-    shadowRadius: 16,
     paddingHorizontal: 20,
   },
   buttonText: {
-    fontSize: 20,
+    fontSize: 15,
   },
   shapesButton: {
     position: 'absolute',

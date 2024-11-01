@@ -261,14 +261,12 @@ const styles = StyleSheet.create({
     marginLeft: 5,
   },
   button: {
-    backgroundColor: '#4960F9',
-    padding: 15,
+    paddingVertical: 8, // Reduced padding
+    paddingHorizontal: 16, // Reduced padding
     borderRadius: 5,
-    alignItems: 'center',
   },
   buttonText: {
-    color: '#fff',
-    fontSize: 16,
+    fontSize: 12, // Reduced font size
   },
   imagePickerText: {
     color: 'blue',

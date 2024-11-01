@@ -97,7 +97,11 @@ const App = () => {
             component={IncomeStatementScreen}
             options={{ headerShown: false }}
           />
-          <Stack.Screen name="MapScreen" component={MapScreen} />
+          <Stack.Screen 
+            name="MapScreen" 
+            component={MapScreen}
+            options={{ headerShown: false }} 
+          />
         </Stack.Navigator>
       </NavigationContainer>
     </UserProvider>

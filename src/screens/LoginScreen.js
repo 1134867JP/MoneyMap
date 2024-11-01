@@ -6,7 +6,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import BackButton from '../components/BackButton';
 import { supabase } from '../services/supabaseClient'; // Importar o cliente do Supabase
 import CustomAlert from '../components/CustomAlert'; // Certifique-se de que o caminho está correto
-import {userAuth} from '../contexts/userContext';
+import { userAuth } from '../contexts/userContext';
 
 const { width } = Dimensions.get('window');
 
@@ -18,7 +18,7 @@ const LoginScreen = ({ navigation }) => {
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
 
-  const {setUserId} = userAuth();
+  const { fetchUserProfile } = userAuth();
 
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
@@ -68,9 +68,8 @@ const LoginScreen = ({ navigation }) => {
       setAlertMessage(errorMessage);
       setAlertVisible(true);
     } else {
-      let userId = data.user.id;
-      console.log('Usuário logado:', userId);
-      setUserId(userId);
+      const userData = data.user;
+      await fetchUserProfile(userData); // Fetch and store user profile data in context
       navigation.navigate('HomeTabs');
     }
   };
@@ -189,5 +188,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 10,
     backgroundColor: 'transparent', // Remove o fundo para evitar divisória
+  },
+  button: {
+    paddingVertical: 8, // Reduced padding
+    paddingHorizontal: 16, // Reduced padding
+    borderRadius: 5,
+  },
+  buttonText: {
+    fontSize: 12, // Reduced font size
   },
 });

@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import CustomButton from "../components/CustomButton";
-import { PieChart } from "react-native-chart-kit";
+import { PieChart, BarChart } from "react-native-chart-kit";
 import { supabase } from "../services/supabaseClient";
 import { userAuth } from '../contexts/userContext';
 
@@ -19,9 +19,21 @@ const { width } = Dimensions.get("window");
 const HomeScreen = ({ navigation }) => {
   const { userId } = userAuth();
   const [balance, setBalance] = useState(0);
-  const [expenseData, setExpenseData] = useState([]);
+  const [expenseData, setExpenseData] = useState([
+    { name: "Alimentação", amount: 50, color: "red", legendFontColor: "#7F7F7F", legendFontSize: 15 },
+    { name: "Transporte", amount: 30, color: "blue", legendFontColor: "#7F7F7F", legendFontSize: 15 },
+    { name: "Lazer", amount: 20, color: "green", legendFontColor: "#7F7F7F", legendFontSize: 15 },
+  ]);
   const [fullName, setFullName] = useState('');
   const [profileImage, setProfileImage] = useState("");
+  const [barChartData, setBarChartData] = useState({
+    labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+    datasets: [
+      {
+        data: [20, 45, 28, 80, 99, 43],
+      },
+    ],
+  });
 
   useEffect(() => {
     const fetchFinancialData = async () => {
@@ -93,23 +105,44 @@ const HomeScreen = ({ navigation }) => {
       <View style={styles.balanceCard}>
         <Text style={styles.balanceTitle}>Suas Finanças</Text>
         <Text style={styles.balanceAmount}>{`R$ ${balance.toFixed(2)}`}</Text>
+        <View style={styles.columns}>
+          <View style={styles.column}>
+            <View style={styles.rectangle18} />
+            <View style={styles.rectangle19} />
+            <Text style={styles.columnLabel}>Jan/24</Text>
+          </View>
+          <View style={styles.column}>
+            <View style={styles.rectangle18} />
+            <View style={styles.rectangle19} />
+            <Text style={styles.columnLabel}>Feb/24</Text>
+          </View>
+          <View style={styles.column}>
+            <View style={styles.rectangle18} />
+            <View style={styles.rectangle19} />
+            <Text style={styles.columnLabel}>Mar/24</Text>
+          </View>
+          <View style={styles.column}>
+            <View style={styles.rectangle18} />
+            <View style={styles.rectangle19} />
+            <Text style={styles.columnLabel}>Apr/24</Text>
+          </View>
+          <View style={styles.column}>
+            <View style={styles.rectangle18} />
+            <View style={styles.rectangle19} />
+            <Text style={styles.columnLabel}>May/24</Text>
+          </View>
+          <View style={styles.column}>
+            <View style={styles.rectangle18} />
+            <View style={styles.rectangle19} />
+            <Text style={styles.columnLabel}>Jun/24</Text>
+          </View>
+          <View style={styles.column}>
+            <View style={styles.rectangle18} />
+            <View style={styles.rectangle19} />
+            <Text style={styles.columnLabel}>Jul/24</Text>
+          </View>
+        </View>
       </View>
-
-      {expenseData.length > 0 && (
-        <PieChart
-          data={expenseData}
-          width={width - 40}
-          height={220}
-          chartConfig={{
-            backgroundGradientFrom: "#FFFFFF",
-            backgroundGradientTo: "#FFFFFF",
-            color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-          }}
-          accessor="amount"
-          backgroundColor="transparent"
-          paddingLeft="15"
-        />
-      )}
 
       <View style={styles.buttonContainer}>
         {/* Botões Maiores */}
@@ -143,7 +176,7 @@ const HomeScreen = ({ navigation }) => {
             style={styles.largeButton}
             gradientColors={["#4960F9", "#4033FF"]}
             onPress={() => navigation.navigate("AddIncome")}
-            label="Adicionar Receita"
+            label="Adicionar Receitas"
             textStyle={styles.smallButtonText}
           />
         </View>
@@ -207,12 +240,16 @@ const styles = StyleSheet.create({
   balanceCard: {
     position: "absolute",
     width: 350,
-    height: 225,
+    height: 290,
     left: 27,
     top: 188,
     backgroundColor: "#FFFFFF",
     borderRadius: 40,
-    boxShadow: "9px 0px 50px rgba(0, 0, 0, 0.1)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 30 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5,
     padding: 20,
   },
   balanceTitle: { fontFamily: "Montserrat", fontSize: 16, color: "#000000" },
@@ -223,19 +260,64 @@ const styles = StyleSheet.create({
     color: "#2D99FF",
     marginTop: 10,
   },
-  buttonContainer: { marginTop: 450, paddingHorizontal: 20 },
+  columns: {
+    position: "absolute",
+    width: 250,
+    height: 150, // Increased height to accommodate the labels
+    left: 50, // Centered horizontally within the balance card
+    top: 100, // Positioned below the balance amount
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "flex-end",
+  },
+  column: {
+    alignItems: "center",
+  },
+  rectangle18: {
+    width: 9,
+    height: 85.51,
+    backgroundColor: "#2D99FF",
+    marginBottom: 2, // Space between the bars
+    marginRight: 2, // Space between the bars horizontally
+  },
+  rectangle19: {
+    width: 9,
+    height: 22.43,
+    backgroundColor: "#A5F3FF",
+    transform: [{ scaleY: -1 }],
+    marginTop: 2, // Space between the bars
+    marginLeft: 20, // Space between the bars horizontally
+  },
+  columnLabel: {
+    marginTop: 15, // Space between the column and the label
+    fontSize: 12,
+    textAlign: "center",
+    transform: [{ rotate: "90deg" }],
+  },
+  buttonContainer: { marginTop: 550, paddingHorizontal: 29 },
   largeButtonRow: {
     justifyContent: "space-between",
-    marginBottom: 10,
   }, // Espaço entre botões grandes
-  largeButton: { flex: 1, marginRight: 10, borderRadius: 40, height: 55 },
+  largeButton: {
+    flex: 1,
+    marginRight: 10,
+    borderRadius: 40,
+    height: 40, // Further reduced height
+  },
   smallButtonRow: { flexDirection: "row", justifyContent: "space-between" },
   smallButton: {
     width: "48%",
-    marginVertical: 10,
     borderRadius: 40,
-    height: 40,
+    height: 30, // Further reduced height
   },
-  buttonText: { fontFamily: "Montserrat", fontSize: 20, color: "#FFFFFF" },
-  smallButtonText: { fontFamily: "Montserrat", fontSize: 16, color: "#FFFFFF" },
+  buttonText: {
+    fontFamily: "Montserrat",
+    fontSize: 14, // Further reduced font size
+    color: "#FFFFFF",
+  },
+  smallButtonText: {
+    fontFamily: "Montserrat",
+    fontSize: 12, // Further reduced font size
+    color: "#FFFFFF",
+  },
 });
