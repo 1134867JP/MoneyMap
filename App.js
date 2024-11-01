@@ -15,8 +15,9 @@ import NotificationsScreen from './src/screens/NotificationScreen';
 import AddExpense from './src/screens/AddExpenseScreen';
 import AddIncome from './src/screens/AddIncomeScreen';
 import ExpenseStatementScreen from './src/screens/ExpenseStatementScreen';
+import IncomeStatementScreen from './src/screens/IncomeStatementScreen';
 import { UserProvider } from './src/contexts/userContext';
-
+import MapScreen from './src/screens/MapScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -91,6 +92,12 @@ const App = () => {
             component={ExpenseStatementScreen}
             options={{ headerShown: false }}
           />
+          <Stack.Screen
+            name="IncomeStatement"
+            component={IncomeStatementScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen name="MapScreen" component={MapScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </UserProvider>

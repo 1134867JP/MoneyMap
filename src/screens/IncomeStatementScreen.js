@@ -17,7 +17,7 @@ import MapIcon from '../components/mapIcon';
 
 const { width } = Dimensions.get('window');
 
-const ExpenseStatementScreen = ({ navigation }) => {
+const IncomeStatementScreen = ({ navigation }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -26,11 +26,11 @@ const ExpenseStatementScreen = ({ navigation }) => {
   const maximizedHeight = screenHeight * 0.7; // Increased height
 
   const transactions = [
-    { id: '1', category: 'Shopping', amount: -150, date: '15 Mar 2019, 8:20 PM' },
-    { id: '2', category: 'Medicine', amount: -76.8, date: '15 Mar 2019, 12:10 AM' },
-    { id: '3', category: 'Sport', amount: -98.5, date: '15 Mar 2019, 7:20 PM' },
-    { id: '4', category: 'Shopping', amount: -230, date: '5 Mar 2019, 6:20 PM' },
-    { id: '5', category: 'Travel', amount: -299, date: '2 Mar 2019, 6:55 PM' },
+    { id: '1', category: 'Salary', amount: 1500, date: '15 Mar 2019, 8:20 PM' },
+    { id: '2', category: 'Freelance', amount: 800, date: '15 Mar 2019, 12:10 AM' },
+    { id: '3', category: 'Investment', amount: 500, date: '15 Mar 2019, 7:20 PM' },
+    { id: '4', category: 'Gift', amount: 200, date: '5 Mar 2019, 6:20 PM' },
+    { id: '5', category: 'Other', amount: 300, date: '2 Mar 2019, 6:55 PM' },
   ];
 
   const filteredModalTransactions = transactions.filter(transaction =>
@@ -46,13 +46,13 @@ const ExpenseStatementScreen = ({ navigation }) => {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Icon name="arrow-back" size={24} color="#FFFFFF" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Extrato</Text>
-        <Text style={styles.totalExpenses}>Total de Despesas</Text>
-        <Text style={styles.totalAmount}>R$1.065,50</Text>
+        <Text style={styles.headerTitle}>Extrato de Receitas</Text>
+        <Text style={styles.totalExpenses}>Total de Receitas</Text>
+        <Text style={styles.totalAmount}>R$3.300,00</Text>
       </LinearGradient>
       <MapIcon />
 
-      <Text style={styles.subtitle}>Acompanhe suas despesas</Text>
+      <Text style={styles.subtitle}>Acompanhe suas receitas</Text>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
         {transactions.map((transaction) => (
@@ -108,7 +108,7 @@ const ExpenseStatementScreen = ({ navigation }) => {
                 <Icon name="search" size={24} color="#FFFFFF" style={styles.searchIcon} />
                 <TextInput
                   style={styles.searchInput}
-                  placeholder="Pesquisar despesas"
+                  placeholder="Pesquisar receitas"
                   placeholderTextColor="#FFFFFF"
                   value={searchQuery}
                   onChangeText={setSearchQuery}
@@ -135,7 +135,7 @@ const ExpenseStatementScreen = ({ navigation }) => {
                       <Text style={styles.expenseCategory}>{item.category}</Text>
                       <Text style={styles.expenseDate}>{item.date}</Text>
                     </View>
-                    <Text style={styles.expenseAmount}>-R${Math.abs(item.amount).toFixed(2)}</Text>
+                    <Text style={styles.expenseAmount}>R${Math.abs(item.amount).toFixed(2)}</Text>
                   </View>
                 )}
                 style={styles.expenseList}
@@ -159,14 +159,16 @@ const ExpenseStatementScreen = ({ navigation }) => {
 
 const getGradientColors = (category) => {
   switch (category.toLowerCase()) {
-    case 'shopping':
+    case 'salary':
       return ['#FFCF87', '#CA9547'];
-    case 'medicine':
+    case 'freelance':
       return ['#E09FFF', '#8034A5'];
-    case 'sport':
+    case 'investment':
       return ['#87F0FF', '#409AA7'];
-    case 'travel':
+    case 'gift':
       return ['#FF8787', '#C16A6A'];
+    case 'other':
+      return ['#FFCF87', '#CA9547'];
     default:
       return ['#FFCF87', '#CA9547'];
   }
@@ -174,14 +176,16 @@ const getGradientColors = (category) => {
 
 const getCategoryIcon = (category) => {
   switch (category.toLowerCase()) {
-    case 'shopping':
-      return 'shopping-bag';
-    case 'medicine':
-      return 'local-hospital';
-    case 'sport':
-      return 'fitness-center';
-    case 'travel':
-      return 'flight';
+    case 'salary':
+      return 'attach-money';
+    case 'freelance':
+      return 'work';
+    case 'investment':
+      return 'trending-up';
+    case 'gift':
+      return 'card-giftcard';
+    case 'other':
+      return 'more-horiz';
     default:
       return 'attach-money';
   }
@@ -216,7 +220,7 @@ const styles = StyleSheet.create({
   },
   totalAmount: {
     fontSize: 24,
-    color: '# FFFFFF',
+    color: '#FFFFFF',
     fontWeight: 'bold',
     marginTop: 5,
   },
@@ -381,4 +385,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ExpenseStatementScreen;
+export default IncomeStatementScreen;

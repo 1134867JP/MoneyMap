@@ -124,7 +124,7 @@ const HomeScreen = ({ navigation }) => {
           <CustomButton
             style={styles.smallButton}
             gradientColors={["#4960F9", "#4033FF"]}
-            onPress={() => navigation.navigate("Receita")}
+            onPress={() => navigation.navigate("IncomeStatement")}
             label="Confira suas Receitas"
             textStyle={styles.buttonText}
           />

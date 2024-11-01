@@ -5,223 +5,191 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
-  Switch,
-  Platform,
+  ScrollView,
+  Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { supabase } from '../services/supabaseClient';
-import CustomButton from '../components/CustomButton';
-import Icon from 'react-native-vector-icons/MaterialIcons';
 import { Picker } from '@react-native-picker/picker';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import CustomButton from '../components/CustomButton';
+import BackButton from '../components/BackButton';
+
+const { width } = Dimensions.get('window');
 
 const AddExpenseScreen = ({ navigation }) => {
-  const [name, setName] = useState('');
+  const [name, setName] = useState('@Exemplo_teste');
   const [category, setCategory] = useState('');
-  const [amount, setAmount] = useState('');
-  const [expenseDate, setExpenseDate] = useState(new Date());
-  const [validityDate, setValidityDate] = useState(new Date());
+  const [amount, setAmount] = useState('R$0,00');
+  const [expenseDate, setExpenseDate] = useState(new Date('2000-12-20'));
+  const [validityDate, setValidityDate] = useState(new Date('2001-12-20'));
   const [showExpenseDatePicker, setShowExpenseDatePicker] = useState(false);
   const [showValidityDatePicker, setShowValidityDatePicker] = useState(false);
-  const [addLocation, setAddLocation] = useState(false);
-
-  const handleAddExpense = async () => {
-    if (!name || !category || !amount || !expenseDate) {
-      Alert.alert('Erro', 'Por favor, preencha todos os campos obrigatórios.');
-      return;
-    }
-
-    const expenseData = {
-      name,
-      category,
-      amount: parseFloat(amount),
-      expense_date: expenseDate,
-      validity_date: validityDate,
-      add_location: addLocation,
-    };
-
-    const { error } = await supabase
-      .from('expenses')
-      .insert([expenseData]);
-
-    if (error) {
-      console.error('Erro ao adicionar despesa:', error);
-      Alert.alert('Erro', 'Não foi possível adicionar a despesa.');
-    } else {
-      Alert.alert('Sucesso', 'Despesa adicionada com sucesso!');
-      navigation.goBack();
-    }
-  };
 
   return (
     <View style={styles.container}>
-      <LinearGradient colors={['#4960F9', '#1937FE']} style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Icon name="arrow-back" size={24} color="#FFFFFF" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Adicionar Despesa</Text>
-      </LinearGradient>
+      <LinearGradient
+        colors={['#4960F9', '#1937FE']}
+        style={styles.background}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      >
+        <Text style={styles.statusBarTime}>9:41</Text>
 
-      <View style={styles.form}>
-        <Text style={styles.label}>Nome da Despesa*</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Ex: Conta de Luz"
-          value={name}
-          onChangeText={setName}
-          placeholderTextColor="#B9B9B9"
-        />
+        <BackButton/>
+        
+        <ScrollView style={styles.formContainer}>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Nome da Despesa*</Text>
+            <TextInput
+              style={styles.input}
+              value={name}
+              onChangeText={setName}
+              placeholderTextColor="#FFFFFF"
+            />
+          </View>
 
-        <Text style={styles.label}>Categoria*</Text>
-        <View style={styles.pickerContainer}>
-          <Picker
-            selectedValue={category}
-            onValueChange={(itemValue) => setCategory(itemValue)}
-            style={styles.picker}
-          >
-            <Picker.Item label="Selecione uma categoria" value="" />
-            <Picker.Item label="Alimentação" value="Alimentação" />
-            <Picker.Item label="Transporte" value="Transporte" />
-            <Picker.Item label="Habitação" value="Habitação" />
-            {/* Adicione outras categorias conforme necessário */}
-          </Picker>
-        </View>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Categoria*</Text>
+            <Picker
+              selectedValue={category}
+              onValueChange={(itemValue) => setCategory(itemValue)}
+              style={styles.picker}
+            >
+              <Picker.Item label="Selecione uma categoria" value="" />
+              <Picker.Item label="Own data" value="own_data" />
+              <Picker.Item label="Employee reporting to him" value="employee_reporting" />
+              <Picker.Item label="All employees" value="all_employees" />
+            </Picker>
+          </View>
 
-        <Text style={styles.label}>Valor*</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="R$0,00"
-          value={amount}
-          onChangeText={setAmount}
-          keyboardType="numeric"
-          placeholderTextColor="#B9B9B9"
-        />
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Valor*</Text>
+            <TextInput
+              style={styles.input}
+              value={amount}
+              onChangeText={setAmount}
+              keyboardType="numeric"
+              placeholderTextColor="#FFFFFF"
+            />
+          </View>
 
-        <Text style={styles.label}>Data da Despesa*</Text>
-        <TouchableOpacity onPress={() => setShowExpenseDatePicker(true)}>
-          <TextInput
-            style={styles.input}
-            placeholder="20/12/2000"
-            value={expenseDate.toLocaleDateString()}
-            editable={false}
-            placeholderTextColor="#B9B9B9"
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Data da Despesa*</Text>
+            <TouchableOpacity onPress={() => setShowExpenseDatePicker(true)}>
+              <TextInput
+                style={styles.input}
+                value={expenseDate.toLocaleDateString()}
+                editable={false}
+                placeholderTextColor="#FFFFFF"
+              />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Validade da Despesa</Text>
+            <TouchableOpacity onPress={() => setShowValidityDatePicker(true)}>
+              <TextInput
+                style={styles.input}
+                value={validityDate.toLocaleDateString()}
+                editable={false}
+                placeholderTextColor="#FFFFFF"
+              />
+            </TouchableOpacity>
+          </View>
+
+          <CustomButton
+            label="Adicionar"
+            onPress={() => {
+              console.log('Despesa adicionada:', { name, category, amount, expenseDate, validityDate });
+            }}
+            style={styles.button}
           />
-        </TouchableOpacity>
+
+          <CustomButton
+            label="Finalizar"
+            onPress={() => {
+              console.log('Finalizado!');
+              navigation.goBack();
+            }}
+            style={styles.button}
+          />
+        </ScrollView>
+
         {showExpenseDatePicker && (
           <DateTimePicker
             value={expenseDate}
             mode="date"
             display="default"
             onChange={(event, selectedDate) => {
-              const currentDate = selectedDate || expenseDate;
-              setShowExpenseDatePicker(Platform.OS === 'ios');
-              setExpenseDate(currentDate);
+              setShowExpenseDatePicker(false);
+              if (selectedDate) setExpenseDate(selectedDate);
             }}
           />
         )}
 
-        <Text style={styles.label}>Validade da Despesa</Text>
-        <TouchableOpacity onPress={() => setShowValidityDatePicker(true)}>
-          <TextInput
-            style={styles.input}
-            placeholder="20/12/2001"
-            value={validityDate.toLocaleDateString()}
-            editable={false}
-            placeholderTextColor="#B9B9B9"
-          />
-        </TouchableOpacity>
         {showValidityDatePicker && (
           <DateTimePicker
             value={validityDate}
             mode="date"
             display="default"
             onChange={(event, selectedDate) => {
-              const currentDate = selectedDate || validityDate;
-              setShowValidityDatePicker(Platform.OS === 'ios');
-              setValidityDate(currentDate);
+              setShowValidityDatePicker(false);
+              if (selectedDate) setValidityDate(selectedDate);
             }}
           />
         )}
-
-        <View style={styles.switchContainer}>
-          <Text style={styles.label}>Deseja adicionar local de Despesa?</Text>
-          <Switch
-            value={addLocation}
-            onValueChange={(value) => setAddLocation(value)}
-          />
-        </View>
-
-        <CustomButton
-          label="Adicionar"
-          onPress={handleAddExpense}
-          gradientColors={['#4960F9', '#1937FE']}
-          textColor="#FFFFFF"
-          iconColor="#FFFFFF"
-        />
-
-        <CustomButton
-          label="Finalizar"
-          onPress={() => navigation.goBack()}
-          gradientColors={['#FFFFFF', '#FFFFFF']}
-          textColor="#4960F9"
-          iconColor="#4960F9"
-        />
-      </View>
+      </LinearGradient>
     </View>
   );
 };
 
-export default AddExpenseScreen;
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
-  header: {
-    paddingTop: 50,
-    paddingBottom: 20,
-    paddingHorizontal: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 20,
-    color: '#FFFFFF',
-    marginLeft: 20,
-  },
-  form: {
+  background: {
     flex: 1,
-    padding: 20,
+    paddingTop: 0,
+  },
+  statusBarTime: {
+    position: 'absolute',
+    top: 29.55,
+    left: width * 0.08,
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  formContainer: {
+    paddingHorizontal: 33,
+    marginTop: 138,
+  },
+  inputGroup: {
+    marginBottom: 25,
   },
   label: {
-    color: '#4960F9',
-    fontSize: 16,
-    marginBottom: 5,
+    color: '#B9B9B9',
+    fontSize: 14,
+    fontFamily: 'Montserrat',
+    fontWeight: '700',
+    marginBottom: 8,
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#B9B9B9',
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 20,
-    color: '#000000',
-  },
-  pickerContainer: {
-    borderWidth: 1,
-    borderColor: '#B9B9B9',
-    borderRadius: 8,
-    marginBottom: 20,
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontFamily: 'Montserrat',
+    fontWeight: '700',
+    borderBottomWidth: 1,
+    borderBottomColor: '#FFFFFF',
+    paddingBottom: 8,
   },
   picker: {
-    width: '100%',
-    color: '#000000',
+    color: '#FFFFFF',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
-  switchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+  button: {
     marginBottom: 20,
   },
 });
+
+export default AddExpenseScreen;

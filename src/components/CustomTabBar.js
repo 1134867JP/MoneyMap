@@ -33,9 +33,10 @@ const styles = StyleSheet.create({
     height: 92,
     backgroundColor: '#FFFFFF',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 20,
+    shadowOffset: { width: 0, height: -10 }, // Sombra na parte superior
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 5, // Para Android
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
