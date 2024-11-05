@@ -75,7 +75,6 @@ const ProfileScreen = ({ navigation }) => {
     if (!pickerResult.cancelled) {
       const { uri } = pickerResult;
       setProfileImage(uri);
-      // Aqui você implementaria o upload da imagem para seu servidor
     }
   };
 
@@ -184,15 +183,15 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 518.24,
     height: 507.06,
-    left: 93,
+    right: 0, // Ensure it's positioned to the right
     top: -163.15,
   },
   purpleCircle: {
     position: 'absolute',
     width: 356.91,
     height: 356.91,
-    left: 377.83,
-    top: -156,
+    left: 200.41, // Ensure it's positioned correctly in the top right corner
+    top: -106,
     backgroundColor: '#B52FF8',
     borderRadius: 102.625,
     transform: [{ rotate: '52.94deg' }],
@@ -201,8 +200,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 350.18,
     height: 350.18,
-    left: 467.68,
-    top: -163.15,
+    left: 250.56, // Ensure it's positioned correctly in the top right corner
+    top: -103.15,
     backgroundColor: '#40CEF2',
     borderRadius: 102.625,
     transform: [{ rotate: '65.8deg' }],

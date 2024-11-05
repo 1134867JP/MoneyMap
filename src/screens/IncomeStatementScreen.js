@@ -13,7 +13,6 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import MapIcon from '../components/mapIcon';
 
 const { width } = Dimensions.get('window');
 
@@ -22,7 +21,7 @@ const IncomeStatementScreen = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState('');
 
   const screenHeight = Dimensions.get('window').height;
-  const minimizedHeight = 80;
+  const minimizedHeight = 200;
   const maximizedHeight = screenHeight * 0.7; // Increased height
 
   const transactions = [
@@ -46,12 +45,12 @@ const IncomeStatementScreen = ({ navigation }) => {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Icon name="arrow-back" size={24} color="#FFFFFF" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Extrato de Receitas</Text>
-        <Text style={styles.totalExpenses}>Total de Receitas</Text>
-        <Text style={styles.totalAmount}>R$3.300,00</Text>
+        <View style={styles.containerHeader}>
+          <Text style={styles.headerTitle}>Extrato de Receitas</Text>
+          <Text style={styles.totalExpenses}>Total de Receitas</Text>
+          <Text style={styles.totalAmount}>R$3.300,00</Text>
+        </View>
       </LinearGradient>
-      <MapIcon />
-
       <Text style={styles.subtitle}>Acompanhe suas receitas</Text>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
@@ -81,7 +80,7 @@ const IncomeStatementScreen = ({ navigation }) => {
         styles.fixedModalContainer,
         { 
           height: modalVisible ? maximizedHeight : minimizedHeight,
-          bottom: 0, // Reset bottom to 0
+          bottom: 0,
         }
       ]}>
         <LinearGradient
@@ -143,13 +142,42 @@ const IncomeStatementScreen = ({ navigation }) => {
               />
             </KeyboardAvoidingView>
           ) : (
-            <TouchableOpacity 
-              style={styles.minimizedContent}
-              onPress={() => setModalVisible(true)}
-            >
-              <Icon name="search" size={24} color="#FFFFFF" />
-              <Text style={styles.minimizedText}>Pesquisar</Text>
-            </TouchableOpacity>
+            <>
+              <TouchableOpacity 
+                style={styles.minimizedContent}
+                onPress={() => setModalVisible(true)}
+              >
+                <Icon name="search" size={24} color="#FFFFFF" />
+                <Text style={styles.minimizedText}>Pesquisar</Text>
+              </TouchableOpacity>
+              <FlatList
+                data={transactions.slice(0, 2)} // Show first 2 transactions
+                keyExtractor={item => item.id}
+                renderItem={({ item }) => (
+                  <View style={styles.incomeItem}>
+                    <View style={styles.incomeIconContainer}>
+                      <LinearGradient
+                        colors={getGradientColors(item.category)}
+                        style={styles.incomeIcon}
+                      >
+                        <Icon 
+                          name={getCategoryIcon(item.category)} 
+                          size={24} 
+                          color="#FFFFFF" 
+                        />
+                      </LinearGradient>
+                    </View>
+                    <View style={styles.incomeDetails}>
+                      <Text style={styles.incomeCategory}>{item.category}</Text>
+                      <Text style={styles.incomeDate}>{item.date}</Text>
+                    </View>
+                    <Text style={styles.incomeAmount}>R${Math.abs(item.amount).toFixed(2)}</Text>
+                  </View>
+                )}
+                style={styles.incomeList}
+                contentContainerStyle={styles.incomeListContent}
+              />
+            </>
           )}
         </LinearGradient>
       </View>
@@ -203,6 +231,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     position: 'relative',
   },
+  containerHeader: {
+    alignItems: 'center',
+    marginTop: 20,
+  },
   backButton: {
     position: 'absolute',
     top: 50,
@@ -216,7 +248,7 @@ const styles = StyleSheet.create({
   totalExpenses: {
     fontSize: 22,
     color: '#87F0FF',
-    marginTop: 10,
+    marginTop: 50,
   },
   totalAmount: {
     fontSize: 24,
@@ -229,6 +261,7 @@ const styles = StyleSheet.create({
     color: '#3A3A3A',
     marginTop: 10,
     textAlign: 'center',
+    fontWeight: 'bold'
   },
   horizontalScroll: {
     marginTop: 20,

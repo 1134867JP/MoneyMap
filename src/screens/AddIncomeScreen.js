@@ -34,8 +34,9 @@ const AddIncomeScreen = ({ navigation }) => {
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       >
-        <Text style={styles.statusBarTime}>9:41</Text>
-        <BackButton/>
+        <View style={styles.backButtonContainer}>
+          <BackButton color="white" />
+        </View>
         <ScrollView style={styles.formContainer}>
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Nome da Receita*</Text>
@@ -166,14 +167,16 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
   button: {
-    marginTop: 100, // Further reduced margin
-    marginBottom: 20,
-    paddingVertical: 8, // Reduced padding
-    paddingHorizontal: 16, // Reduced padding
-    borderRadius: 5,
+    marginTop: 280, // Further reduced margin
   },
   buttonText: {
     fontSize: 12, // Reduced font size
+  },
+  backButtonContainer: {
+    position: 'absolute',
+    top: 60,
+    left: 20,
+    zIndex: 1,
   },
 });
 

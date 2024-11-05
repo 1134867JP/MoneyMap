@@ -13,6 +13,8 @@ import CustomButton from "../components/CustomButton";
 import { PieChart, BarChart } from "react-native-chart-kit";
 import { supabase } from "../services/supabaseClient";
 import { userAuth } from '../contexts/userContext';
+import { Ionicons } from '@expo/vector-icons'; // Add this import
+import BackButton from "../components/BackButton";
 
 const { width } = Dimensions.get("window");
 
@@ -83,6 +85,10 @@ const HomeScreen = ({ navigation }) => {
         end={{ x: 1, y: 1 }}
         style={styles.backgroundGradient}
       />
+
+      <View style={styles.backButtonContainer}>
+        <BackButton color="white" />
+      </View>
 
       <TouchableOpacity onPress={() => navigation.navigate("Profile")}>
         <Image
@@ -168,7 +174,7 @@ const HomeScreen = ({ navigation }) => {
           <CustomButton
             style={styles.largeButton}
             gradientColors={["#4960F9", "#4033FF"]}
-            onPress={() => navigation.navigate("AddExpense")}
+            onPress={() => navigation.navigate("AddExpenseScreen")}
             label="Adicionar Despesa"
             textStyle={styles.smallButtonText}
           />
@@ -196,6 +202,12 @@ const styles = StyleSheet.create({
     top: 0,
     borderBottomLeftRadius: 66,
     borderBottomRightRadius: 66,
+  },
+  backButtonContainer: {
+    position: 'absolute',
+    top: 60,
+    left: 20,
+    zIndex: 1,
   },
   profileImage: {
     position: "absolute",

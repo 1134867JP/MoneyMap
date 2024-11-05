@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,10 @@ import { Picker } from '@react-native-picker/picker';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import CustomButton from '../components/CustomButton';
 import BackButton from '../components/BackButton';
+import { CheckBox } from 'react-native-elements';
+import { AirbnbRating } from 'react-native-ratings';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import * as Location from 'expo-location';
 
 const { width } = Dimensions.get('window');
 
@@ -25,6 +29,43 @@ const AddExpenseScreen = ({ navigation }) => {
   const [validityDate, setValidityDate] = useState(new Date('2001-12-20'));
   const [showExpenseDatePicker, setShowExpenseDatePicker] = useState(false);
   const [showValidityDatePicker, setShowValidityDatePicker] = useState(false);
+  const [location, setLocation] = useState('');
+  const [useCurrentLocation, setUseCurrentLocation] = useState(false);
+  const [rating, setRating] = useState(0);
+  const nav = useNavigation();
+  const route = useRoute();
+
+  useEffect(() => {
+    if (route.params?.selectedAddress) {
+      console.log('Selected address received:', route.params.selectedAddress); // Debugging line
+      setLocation(route.params.selectedAddress);
+      if (useCurrentLocation) {
+        setUseCurrentLocation(false);
+      }
+    }
+  }, [route.params?.selectedAddress]);
+
+  useEffect(() => {
+    if (useCurrentLocation) {
+      (async () => {
+        let { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          console.log('Permission to access location was denied');
+          return;
+        }
+
+        let location = await Location.getCurrentPositionAsync({});
+        let address = await Location.reverseGeocodeAsync({
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        });
+
+        if (address.length > 0) {
+          setLocation(`${address[0].street}, ${address[0].city}, ${address[0].region}, ${address[0].postalCode}`);
+        }
+      })();
+    }
+  }, [useCurrentLocation]);
 
   return (
     <View style={styles.container}>
@@ -34,10 +75,9 @@ const AddExpenseScreen = ({ navigation }) => {
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       >
-        <Text style={styles.statusBarTime}>9:41</Text>
-
-        <BackButton/>
-        
+        <View style={styles.backButtonContainer}>
+          <BackButton color="white" />
+        </View>
         <ScrollView style={styles.formContainer}>
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Nome da Despesa*</Text>
@@ -98,21 +138,54 @@ const AddExpenseScreen = ({ navigation }) => {
             </TouchableOpacity>
           </View>
 
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Localização da Despesa</Text>
+            <View style={styles.locationContainer}>
+              <TextInput
+                style={[styles.input, { flex: 1 }]}
+                value={location}
+                onChangeText={setLocation}
+                placeholder="Digite o endereço"
+                placeholderTextColor="#FFFFFF"
+              />
+              <TouchableOpacity
+                style={styles.mapButton}
+                onPress={() => nav.navigate('MapExpenseScreen', { fromAddExpense: true })}
+              >
+                <Icon name="map" size={24} color="#FFFFFF" />
+              </TouchableOpacity>
+            </View>
+            <CheckBox
+              title="Usar localização atual"
+              checked={useCurrentLocation}
+              onPress={() => {
+                setUseCurrentLocation(!useCurrentLocation);
+                if (useCurrentLocation) {
+                  setLocation('');
+                }
+              }}
+              containerStyle={styles.checkbox}
+              textStyle={styles.checkboxText}
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Avaliação</Text>
+            <AirbnbRating
+              count={5}
+              reviews={[]}
+              defaultRating={0}
+              size={20}
+              onFinishRating={setRating}
+              starContainerStyle={styles.rating}
+            />
+          </View>
+
           <CustomButton
             label="Adicionar"
             onPress={() => {
               console.log('Despesa adicionada:', { name, category, amount, expenseDate, validityDate });
             }}
-            style={styles.button}
-          />
-
-          <CustomButton
-            label="Finalizar"
-            onPress={() => {
-              console.log('Finalizado!');
-              navigation.goBack();
-            }}
-            style={styles.button}
           />
         </ScrollView>
 
@@ -187,14 +260,43 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
-  button: {
-    marginBottom: 20,
-    paddingVertical: 8, // Reduced padding
-    paddingHorizontal: 16, // Reduced padding
-    borderRadius: 5,
-  },
   buttonText: {
     fontSize: 12, // Reduced font size
+  },
+  locationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  mapButton: {
+    marginLeft: 10,
+    padding: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 5,
+  },
+  rating: {
+    marginTop: -40,
+    alignSelf: 'flex-start',
+    marginBottom: -40
+  },
+  checkbox: {
+    backgroundColor: 'transparent',
+    borderWidth: 0,
+    padding: 0,
+  },
+  checkboxText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontFamily: 'Montserrat',
+    fontWeight: '700',
+  },
+  button: {
+    marginBottom: 50,
+  },
+  backButtonContainer: {
+    position: 'absolute',
+    top: 60,
+    left: 20,
+    zIndex: 1,
   },
 });
 

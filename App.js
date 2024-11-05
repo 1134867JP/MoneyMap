@@ -12,12 +12,15 @@ import Login from './src/screens/LoginScreen';
 import SignUpScreen from './src/screens/SignUpScreen';
 import ForgotPassword from './src/screens/ForgotPasswordScreen';
 import NotificationsScreen from './src/screens/NotificationScreen';
-import AddExpense from './src/screens/AddExpenseScreen';
+import AddExpenseScreen from './src/screens/AddExpenseScreen';
 import AddIncome from './src/screens/AddIncomeScreen';
 import ExpenseStatementScreen from './src/screens/ExpenseStatementScreen';
 import IncomeStatementScreen from './src/screens/IncomeStatementScreen';
 import { UserProvider } from './src/contexts/userContext';
+import MapExpenseScreen from './src/screens/MapExpenseScreen';
+import WebViewScreen from './src/screens/WebViewScreen';
 import MapScreen from './src/screens/MapScreen';
+
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -78,8 +81,8 @@ const App = () => {
             options={{ headerShown: false }}
           />
           <Stack.Screen
-            name="AddExpense"
-            component={AddExpense}
+            name="AddExpenseScreen" // Certifique-se de que o nome está correto
+            component={AddExpenseScreen}
             options={{ headerShown: false }}
           />
           <Stack.Screen
@@ -98,9 +101,19 @@ const App = () => {
             options={{ headerShown: false }}
           />
           <Stack.Screen 
+            name="MapExpenseScreen" 
+            component={MapExpenseScreen}
+            options={{ headerShown: false }} 
+          />
+          <Stack.Screen 
             name="MapScreen" 
             component={MapScreen}
             options={{ headerShown: false }} 
+          />
+          <Stack.Screen // Adicione esta seção
+            name="WebViewScreen"
+            component={WebViewScreen}
+            options={{ headerShown: false }}
           />
         </Stack.Navigator>
       </NavigationContainer>

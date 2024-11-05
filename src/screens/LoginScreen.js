@@ -83,7 +83,9 @@ const LoginScreen = ({ navigation }) => {
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View style={{ flex: 1 }}>
             <AuthScreenLayout title="Login" logoSource={require('../../assets/logo.png')}>
-              <BackButton />
+              <View style={styles.backButtonContainer}>
+                <BackButton />
+              </View>
               <View style={styles.inputContainer}>
                 <TextInput
                   style={styles.input}
@@ -196,5 +198,11 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: 12, // Reduced font size
+  },
+  backButtonContainer: {
+    position: 'absolute',
+    top: 60,
+    left: 20,
+    zIndex: 1,
   },
 });
