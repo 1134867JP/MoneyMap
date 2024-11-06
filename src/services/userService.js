@@ -1,5 +1,4 @@
-const { createClient } = require('@supabase/supabase-js');
-import supabase from './supabaseClient';
+const supabase = require('./supabaseClient');
 
 const uploadImage = async (userId, profileImage) => {
   if (!profileImage) {
@@ -30,7 +29,7 @@ const signUpUser = async (email, password, username, fullName, birthdate, profil
   });
 
   if (signUpError) {
-    throw signUpError;
+    throw new Error(`Error signing up: ${signUpError.message}`);
   }
 
   const userId = signUpData.user.id;
@@ -53,10 +52,10 @@ const signUpUser = async (email, password, username, fullName, birthdate, profil
     ]);
 
   if (insertError) {
-    throw insertError;
+    throw new Error(`Error inserting profile: ${insertError.message}`);
   }
 
   return signUpData;
 };
 
-export { signUpUser, uploadImage };
+module.exports = { signUpUser, uploadImage };

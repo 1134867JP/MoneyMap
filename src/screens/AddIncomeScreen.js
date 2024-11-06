@@ -14,6 +14,7 @@ import { Picker } from '@react-native-picker/picker';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import CustomButton from '../components/CustomButton';
 import BackButton from '../components/BackButton';
+import { wp, hp, scale, verticalScale, moderateScale } from '../utils/dimensions'; // Import utility functions
 
 const { width } = Dimensions.get('window');
 
@@ -37,7 +38,7 @@ const AddIncomeScreen = ({ navigation }) => {
         <View style={styles.backButtonContainer}>
           <BackButton color="white" />
         </View>
-        <ScrollView style={styles.formContainer}>
+        <ScrollView style={styles.formContainer} contentContainerStyle={styles.scrollContent}>
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Nome da Receita*</Text>
             <TextInput
@@ -50,16 +51,28 @@ const AddIncomeScreen = ({ navigation }) => {
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Categoria*</Text>
-            <Picker
-              selectedValue={category}
-              onValueChange={(itemValue) => setCategory(itemValue)}
-              style={styles.picker}
-            >
-              <Picker.Item label="Selecione uma categoria" value="" />
-              <Picker.Item label="Own data" value="own_data" />
-              <Picker.Item label="Employee reporting to him" value="employee_reporting" />
-              <Picker.Item label="All employees" value="all_employees" />
-            </Picker>
+            <View style={styles.categoryPickerContainer}>
+              <Picker
+                selectedValue={category}
+                onValueChange={(itemValue) => setCategory(itemValue)}
+                style={[styles.picker, { flex: 1 }]}
+              >
+                <Picker.Item label="Selecione uma categoria" value="" />
+                <Picker.Item label="Own data" value="own_data" />
+                <Picker.Item label="Employee reporting to him" value="employee_reporting" />
+                <Picker.Item label="All employees" value="all_employees" />
+                <Picker.Item label="Laranja" value="Laranja" />
+                <Picker.Item label="Marrom" value="Marrom" />
+                <Picker.Item label="Cinza" value="Cinza" />
+                <Picker.Item label="Preto" value="Preto" />
+              </Picker>
+              <TouchableOpacity
+                style={styles.addButton}
+                onPress={() => navigation.navigate('CategoryMaintenance', { isAdding: true })}
+              >
+                <Icon name="add" size={24} color="#FFFFFF" />
+              </TouchableOpacity>
+            </View>
           </View>
 
           <View style={styles.inputGroup}>
@@ -84,16 +97,21 @@ const AddIncomeScreen = ({ navigation }) => {
               />
             </TouchableOpacity>
           </View>
+        </ScrollView>
 
+        <View style={styles.buttonContainer}>
           <CustomButton
             label="Finalizar"
             onPress={() => {
               console.log('Finalizado!');
               navigation.goBack();
             }}
-            style={styles.button}
+            style={[styles.button]}
+            gradientColors={['#FFFFFF', '#FFFFFF']} // Set gradient colors to white
+            textColor="#1937FE" // Set text color to black for contrast
+            iconColor="#1937FE" // Set icon color to black for contrast
           />
-        </ScrollView>
+        </View>
 
         {showIncomeDatePicker && (
           <DateTimePicker
@@ -133,49 +151,71 @@ const styles = StyleSheet.create({
   },
   statusBarTime: {
     position: 'absolute',
-    top: 29.55,
-    left: width * 0.08,
-    fontSize: 15,
+    top: verticalScale(29.55),
+    left: wp(8),
+    fontSize: scale(15),
     fontWeight: '700',
     color: '#FFFFFF',
   },
   formContainer: {
-    paddingHorizontal: 33,
-    marginTop: 138,
+    paddingHorizontal: wp(8.8),
+    marginTop: hp(17),
+  },
+  scrollContent: {
+    paddingBottom: hp(10), // Add padding to the bottom of the ScrollView
+    flexGrow: 1, // Ensure the ScrollView takes up the remaining space
   },
   inputGroup: {
-    marginBottom: 25,
+    marginBottom: hp(3),
   },
   label: {
     color: '#B9B9B9',
-    fontSize: 14,
+    fontSize: scale(14),
     fontFamily: 'Montserrat',
     fontWeight: '700',
-    marginBottom: 8,
+    marginBottom: hp(1),
   },
   input: {
     color: '#FFFFFF',
-    fontSize: 14,
+    fontSize: scale(14),
     fontFamily: 'Montserrat',
     fontWeight: '700',
     borderBottomWidth: 1,
     borderBottomColor: '#FFFFFF',
-    paddingBottom: 8,
+    paddingBottom: hp(1),
+  },
+  categoryPickerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   picker: {
     color: '#FFFFFF',
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    flex: 1,
+  },
+  addButton: {
+    marginLeft: 10,
+    padding: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 5,
+  },
+  buttonContainer: {
+    position: 'absolute',
+    bottom: hp(5), // Position the button container at the bottom
+    left: 0,
+    right: 0,
+    alignItems: 'center',
   },
   button: {
-    marginTop: 280, // Further reduced margin
+    alignSelf: 'center',
   },
   buttonText: {
-    fontSize: 12, // Reduced font size
+    fontSize: scale(12),
   },
   backButtonContainer: {
     position: 'absolute',
-    top: 60,
-    left: 20,
+    top: hp(7.5),
+    left: wp(5.3),
     zIndex: 1,
   },
 });

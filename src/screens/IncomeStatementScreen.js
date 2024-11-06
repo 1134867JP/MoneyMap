@@ -58,12 +58,17 @@ const IncomeStatementScreen = ({ navigation }) => {
           <View key={transaction.id} style={styles.transactionCard}>
             <LinearGradient
               colors={getGradientColors(transaction.category)}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
               style={styles.transactionBackground}
             >
+              <TouchableOpacity onPress={() => navigation.navigate('CategoryMaintenance', { category: transaction })} style={styles.editCategoryButton}>
+                <Icon name="edit" size={24} color="#FFFFFF" />
+              </TouchableOpacity>
               <View style={styles.cardIconContainer}>
                 <Icon 
                   name={getCategoryIcon(transaction.category)} 
-                  size={24} 
+                  size={30} 
                   color="#FFFFFF" 
                 />
               </View>
@@ -230,10 +235,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     alignItems: 'center',
     position: 'relative',
+    borderBottomLeftRadius: 40,
+    borderBottomRightRadius: 40,
   },
   containerHeader: {
     alignItems: 'center',
-    marginTop: 20,
   },
   backButton: {
     position: 'absolute',
@@ -241,14 +247,14 @@ const styles = StyleSheet.create({
     left: 20,
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 20,
     color: '#FFFFFF',
     fontWeight: 'bold',
   },
   totalExpenses: {
     fontSize: 22,
     color: '#87F0FF',
-    marginTop: 50,
+    marginTop: 70,
   },
   totalAmount: {
     fontSize: 24,
@@ -257,19 +263,20 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 24,
     color: '#3A3A3A',
-    marginTop: 10,
+    marginTop: 20,
     textAlign: 'center',
     fontWeight: 'bold'
   },
   horizontalScroll: {
-    marginTop: 20,
-    paddingLeft: 24,
+    marginTop: 60,
+    paddingLeft: 20,
   },
   transactionCard: {
-    width: 190, // Further increased width
-    height: 140, // Further increased height
+    width: 250, // Further increased width
+    height: 200, // Further increased height
+    marginTop: 16,
     marginRight: 16,
     borderRadius: 25,
     overflow: 'hidden',
@@ -280,6 +287,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 30, // Further adjusted padding
     paddingVertical: 20, // Further adjusted padding
+  },
+  editCategoryButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    width: 40,
+    height: 40,
+    borderRadius: 15,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   cardIconContainer: {
     justifyContent: 'center',
@@ -306,7 +324,7 @@ const styles = StyleSheet.create({
     right: 0,
     backgroundColor: 'transparent',
     elevation: 5,
-    shadowColor: '#000',
+    shadowColor: '#000', // Ensure this line is present
     shadowOffset: {
       width: 0,
       height: -2,
@@ -314,6 +332,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     bottom: 0, // Reset bottom to 0
+    zIndex: 2, // Ensure this line is present to bring the modal to the front
   },
   modalContent: {
     width: '100%',
@@ -369,7 +388,8 @@ const styles = StyleSheet.create({
   },
   incomeList: {
     flex: 1,
-    marginBottom: 20,
+    marginBottom: 5,
+  
   },
   incomeListContent: {
     paddingHorizontal: 5,
@@ -397,6 +417,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 10,
     paddingVertical: 10,
+    borderRadius: 10,
   },
   incomeDetails: {
     flex: 1,
@@ -404,16 +425,16 @@ const styles = StyleSheet.create({
   },
   incomeCategory: {
     fontSize: 16,
-    color: '#3A3A3A',
+    color: '#ffff',
   },
   incomeDate: {
     fontSize: 14,
-    color: '#9B9B9B',
+    color: '#ffff',
     marginTop: 5,
   },
   incomeAmount: {
     fontSize: 16,
-    color: '#FFCF87',
+    color: '#ffff',
     fontWeight: 'bold',
   },
 });

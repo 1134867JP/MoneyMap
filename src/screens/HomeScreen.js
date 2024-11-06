@@ -14,7 +14,7 @@ import { PieChart, BarChart } from "react-native-chart-kit";
 import { supabase } from "../services/supabaseClient";
 import { userAuth } from '../contexts/userContext';
 import { Ionicons } from '@expo/vector-icons'; // Add this import
-import BackButton from "../components/BackButton";
+import { wp, hp, moderateScale } from '../utils/dimensions';
 
 const { width } = Dimensions.get("window");
 
@@ -78,17 +78,13 @@ const HomeScreen = ({ navigation }) => {
   }, [userId]);
 
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
       <LinearGradient
         colors={["#4960F9", "#1937FE"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.backgroundGradient}
       />
-
-      <View style={styles.backButtonContainer}>
-        <BackButton color="white" />
-      </View>
 
       <TouchableOpacity onPress={() => navigation.navigate("Profile")}>
         <Image
@@ -187,7 +183,7 @@ const HomeScreen = ({ navigation }) => {
           />
         </View>
       </View>
-    </ScrollView>
+    </View>
   );
 };
 
@@ -197,87 +193,92 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#FFFFFF" },
   backgroundGradient: {
     position: "absolute",
-    width,
-    height: 278,
+    width: '100%',
+    height: hp('35%'),
     top: 0,
-    borderBottomLeftRadius: 66,
-    borderBottomRightRadius: 66,
+    borderBottomLeftRadius: moderateScale(66),
+    borderBottomRightRadius: moderateScale(66),
   },
   backButtonContainer: {
     position: 'absolute',
-    top: 60,
-    left: 20,
+    top: hp('8%'),
+    left: wp('5%'),
     zIndex: 1,
   },
   profileImage: {
     position: "absolute",
-    width: 50,
-    height: 50,
-    left: width - 80,
-    top: 68,
-    borderRadius: 18,
+    width: wp('12%'),
+    height: wp('12%'),
+    left: wp('80%'),
+    top: hp('8%'),
+    borderRadius: moderateScale(18),
     filter: "drop-shadow(4px 2px 11px rgba(0, 0, 0, 0.25))",
   },
   profileImagePlaceholder: {
     position: "absolute",
-    width: 50,
-    height: 50,
-    left: width - 80,
-    top: 68,
-    borderRadius: 18,
+    width: wp('12%'),
+    height: wp('12%'),
+    left: wp('80%'),
+    top: hp('8%'),
+    borderRadius: moderateScale(18),
     backgroundColor: "#FFFFFF",
     filter: "drop-shadow(4px 2px 11px rgba(0, 0, 0, 0.25))",
   },
   ellipse8: {
     position: "absolute",
-    width: 10,
-    height: 10,
-    left: width - 40,
-    top: 108,
+    width: wp('2.5%'),
+    height: wp('2.5%'),
+    left: wp('90%'),
+    top: hp('13%'),
     backgroundColor: "#20C968",
     borderWidth: 1,
     borderColor: "#FFFFFF",
   },
   greeting: {
     position: "absolute",
-    width: 151,
-    height: 48,
-    left: 27,
-    top: 113,
+    width: wp('40%'),
+    height: hp('6%'),
+    left: wp('7%'),
+    top: hp('14%'),
     fontFamily: "Montserrat",
-    fontSize: 20,
-    lineHeight: 24,
+    fontSize: moderateScale(20),
+    lineHeight: moderateScale(24),
     color: "#FFFFFF",
   },
   balanceCard: {
     position: "absolute",
-    width: 350,
-    height: 290,
-    left: 27,
-    top: 188,
+    width: wp('85%'),
+    height: hp('36%'),
+    left: wp('7%'),
+    top: hp('23%'),
     backgroundColor: "#FFFFFF",
-    borderRadius: 40,
+    borderRadius: moderateScale(40),
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 30 },
+    shadowOffset: { width: 0, height: moderateScale(30) },
     shadowOpacity: 0.1,
-    shadowRadius: 10,
+    shadowRadius: moderateScale(10),
     elevation: 5,
-    padding: 20,
+    padding: moderateScale(20),
+    alignItems: 'center', // Center the contents horizontally
   },
-  balanceTitle: { fontFamily: "Montserrat", fontSize: 16, color: "#000000" },
+  balanceTitle: { 
+    fontFamily: "Montserrat", 
+    fontSize: moderateScale(16), 
+    color: "#000000",
+    alignSelf: 'flex-start', // Align to the left
+  },
   balanceAmount: {
     fontFamily: "Montserrat",
-    fontSize: 30,
+    fontSize: moderateScale(30),
     fontWeight: "700",
     color: "#2D99FF",
-    marginTop: 10,
+    marginTop: hp('1%'),
+    textAlign: 'left', // Align to the left
+    alignSelf: 'flex-start', // Align to the left
   },
   columns: {
-    position: "absolute",
-    width: 250,
-    height: 150, // Increased height to accommodate the labels
-    left: 50, // Centered horizontally within the balance card
-    top: 100, // Positioned below the balance amount
+    width: '100%', // Ensure the columns take full width
+    height: hp('20%'), // Increased height to accommodate the labels
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "flex-end",
@@ -286,50 +287,47 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   rectangle18: {
-    width: 9,
-    height: 85.51,
+    width: wp('2.5%'),
+    height: hp('10.5%'),
     backgroundColor: "#2D99FF",
-    marginBottom: 2, // Space between the bars
-    marginRight: 2, // Space between the bars horizontally
+    marginBottom: hp('0.25%'), // Space between the bars
+    marginRight: wp('0.5%'), // Space between the bars horizontally
   },
   rectangle19: {
-    width: 9,
-    height: 22.43,
+    width: wp('2.5%'),
+    height: hp('2.75%'),
     backgroundColor: "#A5F3FF",
     transform: [{ scaleY: -1 }],
-    marginTop: 2, // Space between the bars
-    marginLeft: 20, // Space between the bars horizontally
+    marginTop: hp('0.25%'), // Space between the bars
+    marginLeft: wp('5%'), // Space between the bars horizontally
   },
   columnLabel: {
-    marginTop: 15, // Space between the column and the label
-    fontSize: 12,
+    marginTop: hp('1.5%'), // Space between the column and the label
+    fontSize: moderateScale(12),
     textAlign: "center",
     transform: [{ rotate: "90deg" }],
   },
-  buttonContainer: { marginTop: 550, paddingHorizontal: 29 },
+  buttonContainer: { 
+    marginTop: hp('60%'), // Adjusted to move buttons up
+    paddingHorizontal: wp('7%'),
+    paddingBottom: hp('10%'), // Adjust padding to account for the tab bar
+  },
   largeButtonRow: {
     justifyContent: "space-between",
-  }, // Espaço entre botões grandes
+  },
   largeButton: {
     flex: 1,
-    marginRight: 10,
-    borderRadius: 40,
-    height: 40, // Further reduced height
+    marginRight: wp('1.0%'),
+    borderRadius: moderateScale(40),
+    height: moderateScale(30),
   },
-  smallButtonRow: { flexDirection: "row", justifyContent: "space-between" },
+  smallButtonRow: { 
+    flexDirection: "row", 
+    justifyContent: "space-between" 
+  },
   smallButton: {
     width: "48%",
-    borderRadius: 40,
-    height: 30, // Further reduced height
-  },
-  buttonText: {
-    fontFamily: "Montserrat",
-    fontSize: 14, // Further reduced font size
-    color: "#FFFFFF",
-  },
-  smallButtonText: {
-    fontFamily: "Montserrat",
-    fontSize: 12, // Further reduced font size
-    color: "#FFFFFF",
+    borderRadius: moderateScale(40),
+    height: moderateScale(30), // Further reduced height
   },
 });

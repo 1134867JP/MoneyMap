@@ -66,4 +66,8 @@ export const globalStyles = StyleSheet.create({
     fontSize: 16,
     marginRight: 10,
   },
+  categoryPickerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
 });

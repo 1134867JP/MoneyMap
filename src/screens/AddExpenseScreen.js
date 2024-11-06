@@ -7,6 +7,7 @@ import {
   StyleSheet,
   ScrollView,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -22,18 +23,20 @@ import * as Location from 'expo-location';
 const { width } = Dimensions.get('window');
 
 const AddExpenseScreen = ({ navigation }) => {
-  const [name, setName] = useState('@Exemplo_teste');
-  const [category, setCategory] = useState('');
-  const [amount, setAmount] = useState('R$0,00');
-  const [expenseDate, setExpenseDate] = useState(new Date('2000-12-20'));
+  const route = useRoute();
+  const [name, setName] = useState(route.params?.expense?.category || '@Exemplo_teste');
+  const [category, setCategory] = useState(route.params?.expense?.category || '');
+  const [amount, setAmount] = useState(route.params?.expense ? `R$${Math.abs(route.params.expense.amount).toFixed(2)}` : 'R$0,00');
+  const [expenseDate, setExpenseDate] = useState(route.params?.expense ? new Date(route.params.expense.date) : new Date('2000-12-20'));
   const [validityDate, setValidityDate] = useState(new Date('2001-12-20'));
   const [showExpenseDatePicker, setShowExpenseDatePicker] = useState(false);
   const [showValidityDatePicker, setShowValidityDatePicker] = useState(false);
   const [location, setLocation] = useState('');
   const [useCurrentLocation, setUseCurrentLocation] = useState(false);
   const [rating, setRating] = useState(0);
+  const [loading, setLoading] = useState(false);
   const nav = useNavigation();
-  const route = useRoute();
+  const isEditing = route.params?.isEditing || false;
 
   useEffect(() => {
     if (route.params?.selectedAddress) {
@@ -48,9 +51,11 @@ const AddExpenseScreen = ({ navigation }) => {
   useEffect(() => {
     if (useCurrentLocation) {
       (async () => {
+        setLoading(true);
         let { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== 'granted') {
           console.log('Permission to access location was denied');
+          setLoading(false);
           return;
         }
 
@@ -63,6 +68,7 @@ const AddExpenseScreen = ({ navigation }) => {
         if (address.length > 0) {
           setLocation(`${address[0].street}, ${address[0].city}, ${address[0].region}, ${address[0].postalCode}`);
         }
+        setLoading(false);
       })();
     }
   }, [useCurrentLocation]);
@@ -75,10 +81,15 @@ const AddExpenseScreen = ({ navigation }) => {
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       >
+        {loading && (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#FFFFFF" />
+          </View>
+        )}
         <View style={styles.backButtonContainer}>
           <BackButton color="white" />
         </View>
-        <ScrollView style={styles.formContainer}>
+        <ScrollView style={styles.formContainer} contentContainerStyle={styles.scrollViewContent}>
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Nome da Despesa*</Text>
             <TextInput
@@ -91,16 +102,24 @@ const AddExpenseScreen = ({ navigation }) => {
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Categoria*</Text>
-            <Picker
-              selectedValue={category}
-              onValueChange={(itemValue) => setCategory(itemValue)}
-              style={styles.picker}
-            >
-              <Picker.Item label="Selecione uma categoria" value="" />
-              <Picker.Item label="Own data" value="own_data" />
-              <Picker.Item label="Employee reporting to him" value="employee_reporting" />
-              <Picker.Item label="All employees" value="all_employees" />
-            </Picker>
+            <View style={styles.categoryPickerContainer}>
+              <Picker
+                selectedValue={category}
+                onValueChange={(itemValue) => setCategory(itemValue)}
+                style={[styles.picker, { flex: 1 }]}
+              >
+                <Picker.Item label="Selecione uma categoria" value="" />
+                <Picker.Item label="Own data" value="own_data" />
+                <Picker.Item label="Employee reporting to him" value="employee_reporting" />
+                <Picker.Item label="All employees" value="all_employees" />
+              </Picker>
+              <TouchableOpacity
+                style={styles.addButton}
+                onPress={() => navigation.navigate('CategoryMaintenance', { isAdding: true })}
+              >
+                <Icon name="add" size={24} color="#FFFFFF" />
+              </TouchableOpacity>
+            </View>
           </View>
 
           <View style={styles.inputGroup}>
@@ -182,10 +201,17 @@ const AddExpenseScreen = ({ navigation }) => {
           </View>
 
           <CustomButton
-            label="Adicionar"
+            label={isEditing ? "Salvar" : "Adicionar"}
             onPress={() => {
-              console.log('Despesa adicionada:', { name, category, amount, expenseDate, validityDate });
+              if (isEditing) {
+                console.log('Despesa salva:', { name, category, amount, expenseDate, validityDate });
+              } else {
+                console.log('Despesa adicionada:', { name, category, amount, expenseDate, validityDate });
+              }
             }}
+            gradientColors={['#FFFFFF', '#FFFFFF']}
+            textColor="#1937FE"
+            iconColor="#1937FE" 
           />
         </ScrollView>
 
@@ -259,6 +285,7 @@ const styles = StyleSheet.create({
   picker: {
     color: '#FFFFFF',
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    flex: 1,
   },
   buttonText: {
     fontSize: 12, // Reduced font size
@@ -290,13 +317,33 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   button: {
-    marginBottom: 50,
+    marginBottom: 100,
   },
   backButtonContainer: {
     position: 'absolute',
     top: 60,
     left: 20,
     zIndex: 1,
+  },
+  scrollViewContent: {
+    paddingBottom: 60,
+  },
+  loadingContainer: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    zIndex: 2,
+  },
+  categoryPickerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  addButton: {
+    marginLeft: 10,
+    padding: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 5,
   },
 });
 

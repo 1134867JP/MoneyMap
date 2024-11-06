@@ -3,12 +3,12 @@ import { View, TextInput, TouchableOpacity, Text, StyleSheet, Dimensions, FlatLi
 import MapView, { Marker, Callout } from 'react-native-maps';
 import Geocoder from 'react-native-geocoding';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { FontAwesome } from '@expo/vector-icons'; // Adicione esta linha para importar ícones de estrelas
-import BackButton from '../components/BackButton'; // Importe o componente BackButton
+import { FontAwesome } from '@expo/vector-icons';
+import BackButton from '../components/BackButton'
 
 const { width, height } = Dimensions.get('window');
 
-Geocoder.init('AIzaSyBLbUnfzR-Lu6TdfuJ8kJvepAyEE2F2oso'); // Substitua pela sua chave de API
+Geocoder.init('AIzaSyDquCknUBGsVPxMhzGF7DWvJqv3pbKoG3M');
 
 const MapScreen = () => {
   const [region, setRegion] = useState({

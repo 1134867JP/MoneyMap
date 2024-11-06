@@ -1,17 +1,19 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, Dimensions, TextInput, TouchableOpacity, Text, Alert, FlatList } from 'react-native';
+import React, { useState, useEffect, useRef, useContext } from 'react';
+import { View, StyleSheet, Dimensions, TextInput, TouchableOpacity, Text, Alert, FlatList, ActivityIndicator } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import Geocoder from 'react-native-geocoding';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import BackButton from '../components/BackButton';
+import { LocationContext } from '../contexts/LocationContext';
 
 const { width, height } = Dimensions.get('window');
 
-Geocoder.init('AIzaSyBLbUnfzR-Lu6TdfuJ8kJvepAyEE2F2oso'); // Substitua pela sua chave de API
+Geocoder.init('AIzaSyDquCknUBGsVPxMhzGF7DWvJqv3pbKoG3M'); // Substitua pela sua chave de API
 
 const MapExpenseScreen = () => {
+  const { location, loading } = useContext(LocationContext);
   const [region, setRegion] = useState(null);
   const [marker, setMarker] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -21,23 +23,15 @@ const MapExpenseScreen = () => {
   const mapRef = useRef(null); // Add a ref for the MapView
 
   useEffect(() => {
-    (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        console.warn('Permission to access location was denied');
-        return;
-      }
-
-      let location = await Location.getCurrentPositionAsync({});
-      const { latitude, longitude } = location.coords;
+    if (location) {
       setRegion({
-        latitude,
-        longitude,
+        latitude: location.latitude,
+        longitude: location.longitude,
         latitudeDelta: 0.0922,
         longitudeDelta: 0.0421,
       });
-    })();
-  }, []);
+    }
+  }, [location]);
 
   const handleMapPress = async (e) => {
     const { latitude, longitude } = e.nativeEvent.coordinate;
@@ -114,6 +108,14 @@ const MapExpenseScreen = () => {
       console.error('Error fetching place details:', error);
     }
   };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#0000ff" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -226,6 +228,11 @@ const styles = StyleSheet.create({
     padding: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#EEE',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   floatingButton: {
     position: 'absolute',

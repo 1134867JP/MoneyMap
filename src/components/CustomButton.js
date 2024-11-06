@@ -68,6 +68,8 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: 15,
+    width: '80%',
+    zIndex: 2,
   },
   shapesButton: {
     position: 'absolute',

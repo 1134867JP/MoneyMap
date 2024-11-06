@@ -20,6 +20,8 @@ import { UserProvider } from './src/contexts/userContext';
 import MapExpenseScreen from './src/screens/MapExpenseScreen';
 import WebViewScreen from './src/screens/WebViewScreen';
 import MapScreen from './src/screens/MapScreen';
+import CategoryMaintenance from './src/screens/CategoryMaintenance';
+import { LocationProvider } from './src/contexts/LocationContext';
 
 
 const Stack = createStackNavigator();
@@ -53,70 +55,77 @@ const App = () => {
 
   return (
     <UserProvider>
-      <NavigationContainer>
-        <Stack.Navigator initialRouteName="Launch">
-          <Stack.Screen
-            name="Launch"
-            component={LaunchScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="Login"
-            component={Login}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="SignUp"
-            component={SignUpScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="ForgotPassword"
-            component={ForgotPassword}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="HomeTabs"
-            component={TabNavigator}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="AddExpenseScreen" // Certifique-se de que o nome está correto
-            component={AddExpenseScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="AddIncome"
-            component={AddIncome}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="ExpenseStatement"
-            component={ExpenseStatementScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="IncomeStatement"
-            component={IncomeStatementScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen 
-            name="MapExpenseScreen" 
-            component={MapExpenseScreen}
-            options={{ headerShown: false }} 
-          />
-          <Stack.Screen 
-            name="MapScreen" 
-            component={MapScreen}
-            options={{ headerShown: false }} 
-          />
-          <Stack.Screen // Adicione esta seção
-            name="WebViewScreen"
-            component={WebViewScreen}
-            options={{ headerShown: false }}
-          />
-        </Stack.Navigator>
-      </NavigationContainer>
+      <LocationProvider>
+        <NavigationContainer>
+          <Stack.Navigator initialRouteName="Launch">
+            <Stack.Screen
+              name="Launch"
+              component={LaunchScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="Login"
+              component={Login}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="SignUp"
+              component={SignUpScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="ForgotPassword"
+              component={ForgotPassword}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="HomeTabs"
+              component={TabNavigator}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="AddExpenseScreen" // Certifique-se de que o nome está correto
+              component={AddExpenseScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="AddIncome"
+              component={AddIncome}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="ExpenseStatement"
+              component={ExpenseStatementScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="IncomeStatement"
+              component={IncomeStatementScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen 
+              name="MapExpenseScreen" 
+              component={MapExpenseScreen}
+              options={{ headerShown: false }} 
+            />
+            <Stack.Screen 
+              name="MapScreen" 
+              component={MapScreen}
+              options={{ headerShown: false }} 
+            />
+            <Stack.Screen
+              name="WebViewScreen"
+              component={WebViewScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="CategoryMaintenance"
+              component={CategoryMaintenance}
+              options={{ headerShown: false }}
+            />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </LocationProvider>
     </UserProvider>
   );
 };

@@ -9,7 +9,8 @@ import {
   TextInput,
   FlatList,
   KeyboardAvoidingView,
-  Platform
+  Platform,
+  Modal
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -20,9 +21,11 @@ const { width } = Dimensions.get('window');
 const ExpenseStatementScreen = ({ navigation }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortModalVisible, setSortModalVisible] = useState(false);
+  const [sortOption, setSortOption] = useState('date');
 
   const screenHeight = Dimensions.get('window').height;
-  const minimizedHeight = 80;
+  const minimizedHeight = 200; // Adjusted height to match income statement screen
   const maximizedHeight = screenHeight * 0.7; // Increased height
 
   const transactions = [
@@ -37,6 +40,18 @@ const ExpenseStatementScreen = ({ navigation }) => {
     transaction.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const sortTransactions = (option) => {
+    switch (option) {
+      case 'amount':
+        return filteredModalTransactions.sort((a, b) => b.amount - a.amount);
+      case 'category':
+        return filteredModalTransactions.sort((a, b) => a.category.localeCompare(b.category));
+      case 'date':
+      default:
+        return filteredModalTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+    }
+  };
+
   return (
     <View style={styles.container}>
       <LinearGradient
@@ -46,25 +61,33 @@ const ExpenseStatementScreen = ({ navigation }) => {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Icon name="arrow-back" size={24} color="#FFFFFF" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Extrato</Text>
-        <Text style={styles.totalExpenses}>Total de Despesas</Text>
-        <Text style={styles.totalAmount}>R$1.065,50</Text>
+        <View style={styles.containerHeader}>
+          <Text style={styles.headerTitle}>Extrato de Despesas</Text>
+          <Text style={styles.totalExpenses}>Total de Despesas</Text>
+          <Text style={styles.totalAmount}>R$1.065,50</Text>
+        </View>
       </LinearGradient>
       <MapIcon />
 
       <Text style={styles.subtitle}>Acompanhe suas despesas</Text>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
-        {transactions.map((transaction) => (
-          <View key={transaction.id} style={styles.transactionCard}>
+        {transactions.map((transaction, index) => (
+          <View key={transaction.id} style={[
+            styles.transactionCard,
+            index === transactions.length - 1 && { marginRight: 45 } // Add margin to the last item
+          ]}>
             <LinearGradient
               colors={getGradientColors(transaction.category)}
               style={styles.transactionBackground}
             >
+              <TouchableOpacity onPress={() => navigation.navigate('CategoryMaintenance', { category: transaction })} style={styles.editCategoryButton}>
+                <Icon name="edit" size={24} color="#FFFFFF" />
+              </TouchableOpacity>
               <View style={styles.cardIconContainer}>
                 <Icon 
                   name={getCategoryIcon(transaction.category)} 
-                  size={24} 
+                  size={30} // Adjusted icon size
                   color="#FFFFFF" 
                 />
               </View>
@@ -84,75 +107,139 @@ const ExpenseStatementScreen = ({ navigation }) => {
           bottom: 0, // Reset bottom to 0
         }
       ]}>
-        <LinearGradient
-          colors={['#1937FE', '#4960F9']}
-          style={[
-            styles.modalContent,
-            { height: '100%' }
-          ]}
+        <TouchableOpacity
+          style={{ flex: 1 }}
+          activeOpacity={1}
+          onPress={() => !modalVisible && setModalVisible(true)}
         >
-          <TouchableOpacity
-            style={styles.modalHandleContainer}
-            onPress={() => setModalVisible(!modalVisible)}
+          <LinearGradient
+            colors={['#1937FE', '#4960F9']}
+            style={[
+              styles.modalContent,
+              { height: '100%' }
+            ]}
           >
-            <View style={styles.modalHandle} />
-          </TouchableOpacity>
-
-          {modalVisible ? (
-            <KeyboardAvoidingView 
-              behavior={Platform.OS === "ios" ? "padding" : "height"}
-              style={styles.modalInnerContent}
-              keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0}
+            <TouchableOpacity
+              style={styles.modalHandleContainer}
+              onPress={() => setModalVisible(!modalVisible)}
             >
-              <View style={styles.searchContainer}>
-                <Icon name="search" size={24} color="#FFFFFF" style={styles.searchIcon} />
-                <TextInput
-                  style={styles.searchInput}
-                  placeholder="Pesquisar despesas"
-                  placeholderTextColor="#FFFFFF"
-                  value={searchQuery}
-                  onChangeText={setSearchQuery}
-                />
-              </View>
-              <FlatList
-                data={filteredModalTransactions}
-                keyExtractor={item => item.id}
-                renderItem={({ item }) => (
-                  <View style={styles.expenseItem}>
-                    <View style={styles.expenseIconContainer}>
-                      <LinearGradient
-                        colors={getGradientColors(item.category)}
-                        style={styles.expenseIcon}
-                      >
-                        <Icon 
-                          name={getCategoryIcon(item.category)} 
-                          size={24} 
-                          color="#FFFFFF" 
-                        />
-                      </LinearGradient>
-                    </View>
-                    <View style={styles.expenseDetails}>
-                      <Text style={styles.expenseCategory}>{item.category}</Text>
-                      <Text style={styles.expenseDate}>{item.date}</Text>
-                    </View>
-                    <Text style={styles.expenseAmount}>-R${Math.abs(item.amount).toFixed(2)}</Text>
-                  </View>
-                )}
-                style={styles.expenseList}
-                contentContainerStyle={styles.expenseListContent}
-              />
-            </KeyboardAvoidingView>
-          ) : (
-            <TouchableOpacity 
-              style={styles.minimizedContent}
-              onPress={() => setModalVisible(true)}
-            >
-              <Icon name="search" size={24} color="#FFFFFF" />
-              <Text style={styles.minimizedText}>Pesquisar</Text>
+              <View style={styles.modalHandle} />
             </TouchableOpacity>
-          )}
-        </LinearGradient>
+
+            {modalVisible ? (
+              <KeyboardAvoidingView 
+                behavior={Platform.OS === "ios" ? "padding" : "height"}
+                style={styles.modalInnerContent}
+                keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0}
+              >
+                <View style={styles.searchContainer}>
+                  <Icon name="search" size={24} color="#FFFFFF" style={styles.searchIcon} />
+                  <TextInput
+                    style={styles.searchInput}
+                    placeholder="Pesquisar despesas"
+                    placeholderTextColor="#FFFFFF"
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                  />
+                  <TouchableOpacity onPress={() => setSortModalVisible(true)}>
+                    <Icon name="sort" size={24} color="#FFFFFF" style={styles.sortIcon} />
+                  </TouchableOpacity>
+                </View>
+                <FlatList
+                  data={sortTransactions(sortOption)}
+                  keyExtractor={item => item.id}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
+                      onPress={() => navigation.navigate('AddExpenseScreen', { expense: item, isEditing: true })}
+                    >
+                      <View style={styles.expenseItem}>
+                        <View style={styles.expenseIconContainer}>
+                          <LinearGradient
+                            colors={getGradientColors(item.category)}
+                            style={styles.expenseIcon}
+                          >
+                            <Icon 
+                              name={getCategoryIcon(item.category)} 
+                              size={24} 
+                              color="#FFFFFF" 
+                            />
+                          </LinearGradient>
+                        </View>
+                        <View style={styles.expenseDetails}>
+                          <Text style={styles.expenseCategory}>{item.category}</Text>
+                          <Text style={styles.expenseDate}>{item.date}</Text>
+                        </View>
+                        <Text style={styles.expenseAmount}>-R${Math.abs(item.amount).toFixed(2)}</Text>
+                      </View>
+                    </TouchableOpacity>
+                  )}
+                  style={styles.expenseList}
+                  contentContainerStyle={styles.expenseListContent}
+                />
+              </KeyboardAvoidingView>
+            ) : (
+              <>
+                <TouchableOpacity 
+                  style={styles.minimizedContent}
+                  onPress={() => setModalVisible(true)}
+                >
+                  <Icon name="search" size={24} color="#FFFFFF" />
+                  <Text style={styles.minimizedText}>Pesquisar</Text>
+                </TouchableOpacity>
+                <FlatList
+                  data={transactions.slice(0, 2)}
+                  keyExtractor={item => item.id}
+                  renderItem={({ item }) => (
+                    <View style={styles.expenseItem}>
+                      <View style={styles.expenseIconContainer}>
+                        <LinearGradient
+                          colors={getGradientColors(item.category)}
+                          style={styles.expenseIcon}
+                        >
+                          <Icon 
+                            name={getCategoryIcon(item.category)} 
+                            size={24} 
+                            color="#FFFFFF" 
+                          />
+                        </LinearGradient>
+                      </View>
+                      <View style={styles.expenseDetails}>
+                        <Text style={styles.expenseCategory}>{item.category}</Text>
+                        <Text style={styles.expenseDate}>{item.date}</Text>
+                      </View>
+                      <Text style={styles.expenseAmount}>-R${Math.abs(item.amount).toFixed(2)}</Text>
+                    </View>
+                  )}
+                  style={styles.expenseList}
+                  contentContainerStyle={styles.expenseListContent}
+                />
+              </>
+            )}
+          </LinearGradient>
+        </TouchableOpacity>
       </View>
+
+      <Modal
+        visible={sortModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setSortModalVisible(false)}
+      >
+        <View style={styles.sortModalContainer}>
+          <View style={styles.sortModalContent}>
+            <Text style={styles.sortModalTitle}>Ordenar por</Text>
+            <TouchableOpacity onPress={() => { setSortOption('date'); setSortModalVisible(false); }}>
+              <Text style={styles.sortOption}>Data</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => { setSortOption('amount'); setSortModalVisible(false); }}>
+              <Text style={styles.sortOption}>Valor</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => { setSortOption('category'); setSortModalVisible(false); }}>
+              <Text style={styles.sortOption}>Categoria</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -198,6 +285,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     alignItems: 'center',
     position: 'relative',
+    borderBottomLeftRadius: 40,
+    borderBottomRightRadius: 40,
+  },
+  containerHeader: {
+    alignItems: 'center',
   },
   backButton: {
     position: 'absolute',
@@ -205,34 +297,36 @@ const styles = StyleSheet.create({
     left: 20,
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 20,
     color: '#FFFFFF',
     fontWeight: 'bold',
   },
   totalExpenses: {
     fontSize: 22,
     color: '#87F0FF',
-    marginTop: 10,
+    marginTop: 70,
   },
   totalAmount: {
     fontSize: 24,
-    color: '# FFFFFF',
+    color: '#FFFFFF',
     fontWeight: 'bold',
     marginTop: 5,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 24,
     color: '#3A3A3A',
-    marginTop: 10,
+    marginTop: 20,
     textAlign: 'center',
+    fontWeight: 'bold'
   },
   horizontalScroll: {
-    marginTop: 20,
+    marginTop: 60,
     paddingLeft: 24,
   },
   transactionCard: {
-    width: 190, // Further increased width
-    height: 140, // Further increased height
+    width: 250, // Further increased width
+    height: 200, // Further increased height
+    marginTop: 16,
     marginRight: 16,
     borderRadius: 25,
     overflow: 'hidden',
@@ -243,6 +337,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 30, // Further adjusted padding
     paddingVertical: 20, // Further adjusted padding
+  },
+  editCategoryButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    width: 40,
+    height: 40,
+    borderRadius: 15,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   cardIconContainer: {
     justifyContent: 'center',
@@ -367,17 +472,42 @@ const styles = StyleSheet.create({
   },
   expenseCategory: {
     fontSize: 16,
-    color: '#3A3A3A',
+    color: '#FFFFFF', // Adjusted color
   },
   expenseDate: {
     fontSize: 14,
-    color: '#9B9B9B',
+    color: '#FFFFFF', // Adjusted color
     marginTop: 5,
   },
   expenseAmount: {
     fontSize: 16,
-    color: '#FFCF87',
+    color: '#FFFFFF', // Adjusted color
     fontWeight: 'bold',
+  },
+  sortIcon: {
+    marginLeft: 10,
+  },
+  sortModalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  sortModalContent: {
+    width: 300,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    padding: 20,
+    alignItems: 'center',
+  },
+  sortModalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  sortOption: {
+    fontSize: 16,
+    paddingVertical: 10,
   },
 });
 
