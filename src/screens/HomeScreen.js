@@ -177,7 +177,7 @@ const HomeScreen = ({ navigation }) => {
           <CustomButton
             style={styles.largeButton}
             gradientColors={["#4960F9", "#4033FF"]}
-            onPress={() => navigation.navigate("AddIncome")}
+            onPress={() => navigation.navigate("AddIncomeScreen")}
             label="Adicionar Receitas"
             textStyle={styles.smallButtonText}
           />
@@ -240,7 +240,6 @@ const styles = StyleSheet.create({
     height: hp('6%'),
     left: wp('7%'),
     top: hp('14%'),
-    fontFamily: "Montserrat",
     fontSize: moderateScale(20),
     lineHeight: moderateScale(24),
     color: "#FFFFFF",
@@ -262,13 +261,11 @@ const styles = StyleSheet.create({
     alignItems: 'center', // Center the contents horizontally
   },
   balanceTitle: { 
-    fontFamily: "Montserrat", 
     fontSize: moderateScale(16), 
     color: "#000000",
     alignSelf: 'flex-start', // Align to the left
   },
   balanceAmount: {
-    fontFamily: "Montserrat",
     fontSize: moderateScale(30),
     fontWeight: "700",
     color: "#2D99FF",

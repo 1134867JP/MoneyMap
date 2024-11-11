@@ -208,7 +208,6 @@ const styles = StyleSheet.create({
     height: height * 0.07, // Adjust to screen height
     left: width * 0.08, // Adjust to screen width
     top: height * 0.1, // Adjust to screen height
-    fontFamily: 'Montserrat',
     fontWeight: '700',
     fontSize: width * 0.1, // Adjust to screen width
     lineHeight: height * 0.07, // Adjust to screen height
@@ -243,14 +242,12 @@ const styles = StyleSheet.create({
     borderRadius: width * 0.015, // Adjust to screen width
   },
   username: {
-    fontFamily: 'Montserrat',
     fontWeight: '500',
     fontSize: width * 0.05, // Adjust to screen width
     lineHeight: height * 0.03, // Adjust to screen height
     color: '#2743FD',
   },
   onlineStatus: {
-    fontFamily: 'Montserrat',
     fontWeight: '300',
     fontSize: width * 0.04, // Adjust to screen width
     lineHeight: height * 0.025, // Adjust to screen height
@@ -272,7 +269,6 @@ const styles = StyleSheet.create({
     top: height * 0.55, // Adjust to screen height
   },
   label: {
-    fontFamily: 'Montserrat',
     fontWeight: '400',
     fontSize: width * 0.035, // Adjust to screen width
     lineHeight: height * 0.02, // Adjust to screen height
@@ -280,7 +276,6 @@ const styles = StyleSheet.create({
     marginBottom: height * 0.02, // Adjust to screen height
   },
   input: {
-    fontFamily: 'Montserrat',
     fontWeight: '400',
     fontSize: width * 0.035, // Adjust to screen width
     lineHeight: height * 0.02, // Adjust to screen height

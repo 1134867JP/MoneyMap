@@ -10,11 +10,13 @@ import {
   FlatList,
   KeyboardAvoidingView,
   Platform,
-  Modal
+  Modal,
+  Alert
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import MapIcon from '../components/mapIcon';
+import CustomAlert from '../components/CustomAlert'; // Add CustomAlert import
 
 const { width } = Dimensions.get('window');
 
@@ -23,10 +25,16 @@ const ExpenseStatementScreen = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortModalVisible, setSortModalVisible] = useState(false);
   const [sortOption, setSortOption] = useState('date');
+  const [categoryName, setCategoryName] = useState('');
+  const [selectedColor, setSelectedColor] = useState('');
+  const [categories, setCategories] = useState([]);
+  const [editingIndex, setEditingIndex] = useState(null);
+  const [alertVisible, setAlertVisible] = useState(false); 
+  const [alertMessage, setAlertMessage] = useState('');
 
   const screenHeight = Dimensions.get('window').height;
-  const minimizedHeight = 200; // Adjusted height to match income statement screen
-  const maximizedHeight = screenHeight * 0.7; // Increased height
+  const minimizedHeight = 200; 
+  const maximizedHeight = screenHeight * 0.7;
 
   const transactions = [
     { id: '1', category: 'Shopping', amount: -150, date: '15 Mar 2019, 8:20 PM' },
@@ -50,6 +58,29 @@ const ExpenseStatementScreen = ({ navigation }) => {
       default:
         return filteredModalTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
     }
+  };
+
+  const handleAddCategory = () => {
+    if (categoryName.trim() === '') {
+      setAlertMessage('O nome da categoria não pode estar vazio.');
+      setAlertVisible(true);
+      return;
+    }
+  
+    const newCategory = { name: categoryName, color: selectedColor };
+  
+    if (editingIndex !== null) {
+      const updatedCategories = [...categories];
+      updatedCategories[editingIndex] = newCategory;
+      setCategories(updatedCategories);
+      setEditingIndex(null);
+    } else {
+      setCategories([...categories, newCategory]);
+    }
+  
+    setCategoryName('');
+    setAlertMessage('Categoria adicionada com sucesso!');
+    setAlertVisible(true);
   };
 
   return (
@@ -150,7 +181,7 @@ const ExpenseStatementScreen = ({ navigation }) => {
                   keyExtractor={item => item.id}
                   renderItem={({ item }) => (
                     <TouchableOpacity
-                      onPress={() => navigation.navigate('AddExpenseScreen', { expense: item, isEditing: true })}
+                      onPress={() => navigation.navigate('AddExpenseScreen', { expense: item, isEditing: true, fromExpenseStatement: true })}
                     >
                       <View style={styles.expenseItem}>
                         <View style={styles.expenseIconContainer}>
@@ -240,6 +271,16 @@ const ExpenseStatementScreen = ({ navigation }) => {
           </View>
         </View>
       </Modal>
+
+      <CustomAlert
+        visible={alertVisible}
+        title="Sucesso"
+        message={alertMessage}
+        onClose={() => {
+          setAlertVisible(false);
+          navigation.navigate('ExpenseStatementScreen');
+        }}
+      />
     </View>
   );
 };

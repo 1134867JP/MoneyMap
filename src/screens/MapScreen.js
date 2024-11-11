@@ -5,10 +5,11 @@ import Geocoder from 'react-native-geocoding';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { FontAwesome } from '@expo/vector-icons';
 import BackButton from '../components/BackButton'
+import { API_KEY } from '../config'; // Import the API key from the config file
 
 const { width, height } = Dimensions.get('window');
 
-Geocoder.init('AIzaSyDquCknUBGsVPxMhzGF7DWvJqv3pbKoG3M');
+Geocoder.init(API_KEY);
 
 const MapScreen = () => {
   const [region, setRegion] = useState({
@@ -31,7 +32,7 @@ const MapScreen = () => {
 
   const fetchSuggestions = async (query) => {
     try {
-      const response = await fetch(`https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${query}&key=AIzaSyBLbUnfzR-Lu6TdfuJ8kJvepAyEE2F2oso`);
+      const response = await fetch(`https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${query}&key=${API_KEY}`);
       const json = await response.json();
       if (json.status === 'OK') {
         setSuggestions(json.predictions);
@@ -54,7 +55,7 @@ const MapScreen = () => {
 
   const handleSuggestionPress = async (placeId) => {
     try {
-      const response = await fetch(`https://maps.googleapis.com/maps/api/place/details/json?placeid=${placeId}&key=AIzaSyBLbUnfzR-Lu6TdfuJ8kJvepAyEE2F2oso`);
+      const response = await fetch(`https://maps.googleapis.com/maps/api/place/details/json?placeid=${placeId}&key=${API_KEY}`);
       const json = await response.json();
       if (json.status === 'ZERO_RESULTS' || !json.result) {
         Alert.alert('Nenhum resultado encontrado', 'Não foi possível encontrar um endereço para esta localização.');

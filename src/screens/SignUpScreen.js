@@ -1,24 +1,92 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Dimensions, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback, ScrollView, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, Dimensions, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback, ScrollView, TextInput, TouchableOpacity, Text, Alert, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import BackButton from '../components/BackButton';
-import ImagePickerComponent from '../components/ImagePickerComponent';
-import SignUpForm from '../components/SignUpForm';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
+import BackButton from '../components/BackButton';
+import CustomButton from '../components/CustomButton';
+import { validateForm } from '../services/helpers';
+import { signUpUser } from '../services/UserService';
+import { wp, hp } from '../utils/dimensions'; // Import utility functions
 
 const { width } = Dimensions.get('window');
 
 const SignUpScreen = ({ navigation }) => {
   const [profileImage, setProfileImage] = useState(null);
+  const [username, setUsername] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [birthdate, setBirthdate] = useState('');
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
-  useEffect(() => {
-    requestCameraPermission();
-  }, []);
+  const [usernameError, setUsernameError] = useState('');
+  const [fullNameError, setFullNameError] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [confirmPasswordError, setConfirmPasswordError] = useState('');
+  const [birthdateError, setBirthdateError] = useState('');
 
-  const requestCameraPermission = async () => {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permissão negada', 'Você não pode usar a câmera');
+  const handleSignUp = async () => {
+    const { valid, errors } = validateForm({
+      username,
+      fullName,
+      email,
+      password,
+      confirmPassword,
+      birthdate,
+    });
+
+    setUsernameError(errors.usernameError);
+    setFullNameError(errors.fullNameError);
+    setEmailError(errors.emailError);
+    setPasswordError(errors.passwordError);
+    setConfirmPasswordError(errors.confirmPasswordError);
+    setBirthdateError(errors.birthdateError);
+
+    if (valid) {
+      try {
+        const signUpData = await signUpUser(email, password, username, fullName, birthdate, profileImage);
+
+        Alert.alert('Sucesso', 'Conta criada com sucesso!');
+        navigation.navigate('HomeTabs'); // Navigate to Home screen
+      } catch (error) {
+        console.log(error);
+        Alert.alert('Erro', 'Ocorreu um erro. Por favor, tente novamente.');
+      } 
+    }
+  };
+
+  const handleDateChange = (event, selectedDate) => {
+    if (selectedDate) {
+      const currentDate = selectedDate || new Date();
+      setShowDatePicker(false);
+      setBirthdate(currentDate.toLocaleDateString('pt-BR'));
+      setBirthdateError('');
+    } else {
+      setShowDatePicker(false);
+    }
+  };
+
+  const selectImage = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 1,
+      });
+
+      if (!result.canceled) {
+        console.log('Image selected:', result.assets[0].uri);
+        setProfileImage({ uri: result.assets[0].uri });
+      } else {
+        console.log('Image selection cancelled');
+      }
+    } catch (error) {
+      console.error('Error selecting image:', error);
     }
   };
 
@@ -34,11 +102,172 @@ const SignUpScreen = ({ navigation }) => {
             style={styles.backgroundGradient}
           >
             <View style={styles.container}>
-              <BackButton />
+              <View style={styles.backButtonContainer}>
+                <BackButton color="white" />
+              </View>
               <View style={styles.purpleCircle} />
               <View style={styles.blueCircle} />
-              <ImagePickerComponent profileImage={profileImage} setProfileImage={setProfileImage} />
-              <SignUpForm navigation={navigation} profileImage={profileImage} />
+              <TouchableOpacity style={styles.profileImageContainer} onPress={selectImage}>
+                {profileImage ? (
+                  <Image source={{ uri: profileImage.uri }} style={styles.profileImage} />
+                ) : (
+                  <View style={styles.profileImagePlaceholder}>
+                    <Icon name="camera-alt" size={40} color="#3A3A3A" />
+                  </View>
+                )}
+              </TouchableOpacity>
+              <View style={styles.formContainer}>
+                <View style={styles.inputErrorContainer}>
+                  <View style={styles.inputContainer}>
+                    <Text style={styles.label}>Nome de usuário</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Digite seu nome de usuário"
+                      value={username}
+                      onChangeText={(text) => {
+                        setUsername(text);
+                        setUsernameError('');
+                      }}
+                      onFocus={() => setUsernameError('')}
+                      autoCapitalize="none"
+                      placeholderTextColor="#B9B9B9"
+                    />
+                  </View>
+                  {usernameError ? (
+                    <View style={styles.errorContainer}>
+                      <Icon name="error-outline" size={16} color="red" />
+                      <Text style={styles.errorText}>{usernameError}</Text>
+                    </View>
+                  ) : null}
+                </View>
+                <View style={styles.inputErrorContainer}>
+                  <View style={styles.inputContainer}>
+                    <Text style={styles.label}>Nome completo</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Digite seu nome completo"
+                      value={fullName}
+                      onChangeText={(text) => {
+                        setFullName(text);
+                        setFullNameError('');
+                      }}
+                      onFocus={() => setFullNameError('')}
+                      autoCapitalize="words"
+                      placeholderTextColor="#B9B9B9"
+                    />
+                  </View>
+                  {fullNameError ? (
+                    <View style={styles.errorContainer}>
+                      <Icon name="error-outline" size={16} color="red" />
+                      <Text style={styles.errorText}>{fullNameError}</Text>
+                    </View>
+                  ) : null}
+                </View>
+                <View style={styles.inputErrorContainer}>
+                  <View style={styles.inputContainer}>
+                    <Text style={styles.label}>Email</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Digite seu email"
+                      value={email}
+                      onChangeText={(text) => {
+                        setEmail(text);
+                        setEmailError('');
+                      }}
+                      onFocus={() => setEmailError('')}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                      placeholderTextColor="#B9B9B9"
+                    />
+                  </View>
+                  {emailError ? (
+                    <View style={styles.errorContainer}>
+                      <Icon name="error-outline" size={16} color="red" />
+                      <Text style={styles.errorText}>{emailError}</Text>
+                    </View>
+                  ) : null}
+                </View>
+                <View style={styles.inputErrorContainer}>
+                  <View style={styles.inputContainer}>
+                    <Text style={styles.label}>Senha</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Digite sua senha"
+                      value={password}
+                      onChangeText={(text) => {
+                        setPassword(text);
+                        setPasswordError('');
+                      }}
+                      onFocus={() => setPasswordError('')}
+                      secureTextEntry
+                      placeholderTextColor="#B9B9B9"
+                    />
+                  </View>
+                  {passwordError ? (
+                    <View style={styles.errorContainer}>
+                      <Icon name="error-outline" size={16} color="red" />
+                      <Text style={styles.errorText}>{passwordError}</Text>
+                    </View>
+                  ) : null}
+                </View>
+                <View style={styles.inputErrorContainer}>
+                  <View style={styles.inputContainer}>
+                    <Text style={styles.label}>Confirmar senha</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Confirme sua senha"
+                      value={confirmPassword}
+                      onChangeText={(text) => {
+                        setConfirmPassword(text);
+                        setConfirmPasswordError('');
+                      }}
+                      onFocus={() => setConfirmPasswordError('')}
+                      secureTextEntry
+                      placeholderTextColor="#B9B9B9"
+                    />
+                  </View>
+                  {confirmPasswordError ? (
+                    <View style={styles.errorContainer}>
+                      <Icon name="error-outline" size={16} color="red" />
+                      <Text style={styles.errorText}>{confirmPasswordError}</Text>
+                    </View>
+                  ) : null}
+                </View>
+                <View style={styles.inputErrorContainer}>
+                  <Text style={styles.label}>Data de nascimento</Text>
+                  <TouchableOpacity onPress={() => setShowDatePicker(true)}>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Digite sua data de nascimento"
+                      value={birthdate}
+                      editable={false}
+                      placeholderTextColor="#B9B9B9"
+                    />
+                  </TouchableOpacity>
+                  <View style={styles.inputContainer}/>
+                </View>
+                {birthdateError ? (
+                  <View style={styles.errorContainer}>
+                    <Icon name="error-outline" size={16} color="red" />
+                    <Text style={styles.errorText}>{birthdateError}</Text>
+                  </View>
+                ) : null}
+                {showDatePicker && (
+                  <DateTimePicker
+                    value={new Date()}
+                    mode="date"
+                    display="default"
+                    onChange={handleDateChange}
+                  />
+                )}
+                <CustomButton
+                  label="Finalizar"
+                  onPress={handleSignUp}
+                  gradientColors={['#FFFFFF', '#FFFFFF']}
+                  textColor="#4960F9"
+                  iconColor="#4960F9"
+                />
+              </View>
             </View>
           </LinearGradient>
         </TouchableWithoutFeedback>
@@ -56,6 +285,12 @@ const styles = StyleSheet.create({
   },
   backgroundGradient: {
     flex: 1,
+  },
+  backButtonContainer: {
+    position: 'absolute',
+    top: hp(7.5), // Adjusted to match AddIncomeScreen
+    left: wp(5.3), // Adjusted to match AddIncomeScreen
+    zIndex: 1,
   },
   purpleCircle: {
     position: 'absolute',
@@ -84,5 +319,71 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: 12, // Reduced font size
+  },
+  profileImageContainer: {
+    position: 'absolute',
+    width: 146.63,
+    height: 146.63,
+    left: Dimensions.get('window').width / 2 - 73.315,
+    top: 72,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  profileImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 36,
+  },
+  profileImagePlaceholder: {
+    width: 100,
+    height: 100,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: 'rgba(0, 0, 0, 0.25)',
+    shadowOffset: { width: 8, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 22,
+  },
+  formContainer: {
+    marginTop: 220,
+    paddingHorizontal: 30,
+  },
+  inputErrorContainer: {
+    marginBottom: 20,
+  },
+  inputContainer: {
+    flexDirection: 'column', // Alterado para coluna para acomodar o label acima do TextInput
+    alignItems: 'flex-start', // Alinhar os itens à esquerda
+    borderBottomWidth: 1,
+    borderColor: '#FFFFFF',
+    paddingBottom: 5,
+  },
+  label: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    marginBottom: 2, // Ajuste o espaçamento entre o label e o TextInput
+  },
+  input: {
+    flex: 1,
+    paddingTop: 5, // Ajuste o espaçamento vertical do TextInput
+    fontSize: 16,
+    color: '#FFFFFF',
+    width: '100%',
+  },
+  errorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 5,
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 12,
+    marginLeft: 5,
+  },
+  imagePickerText: {
+    color: 'blue',
+    marginBottom: 20,
   },
 });

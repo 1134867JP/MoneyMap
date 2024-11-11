@@ -7,10 +7,11 @@ import * as Location from 'expo-location';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import BackButton from '../components/BackButton';
 import { LocationContext } from '../contexts/LocationContext';
+import { API_KEY } from '../config'; // Import the API key from the config file
 
 const { width, height } = Dimensions.get('window');
 
-Geocoder.init('AIzaSyDquCknUBGsVPxMhzGF7DWvJqv3pbKoG3M'); // Substitua pela sua chave de API
+Geocoder.init(API_KEY);
 
 const MapExpenseScreen = () => {
   const { location, loading } = useContext(LocationContext);
@@ -59,7 +60,7 @@ const MapExpenseScreen = () => {
 
   const fetchSuggestions = async (query) => {
     try {
-      const response = await fetch(`https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${query}&key=AIzaSyBLbUnfzR-Lu6TdfuJ8kJvepAyEE2F2oso`);
+      const response = await fetch(`https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${query}&key=${API_KEY}`);
       const json = await response.json();
       if (json.status === 'OK') {
         setSuggestions(json.predictions);
@@ -82,7 +83,7 @@ const MapExpenseScreen = () => {
 
   const handleSuggestionPress = async (placeId) => {
     try {
-      const response = await fetch(`https://maps.googleapis.com/maps/api/place/details/json?placeid=${placeId}&key=AIzaSyBLbUnfzR-Lu6TdfuJ8kJvepAyEE2F2oso`);
+      const response = await fetch(`https://maps.googleapis.com/maps/api/place/details/json?placeid=${placeId}&key=${API_KEY}`);
       const json = await response.json();
       if (json.status === 'ZERO_RESULTS' || !json.result) {
         Alert.alert('Nenhum resultado encontrado', 'Não foi possível encontrar um endereço para esta localização.');

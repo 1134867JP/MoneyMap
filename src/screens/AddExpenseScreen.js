@@ -19,12 +19,14 @@ import { CheckBox } from 'react-native-elements';
 import { AirbnbRating } from 'react-native-ratings';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import * as Location from 'expo-location';
+import { wp, hp, moderateScale } from '../utils/dimensions';
+import CustomAlert from '../components/CustomAlert'; // Add this import
 
 const { width } = Dimensions.get('window');
 
 const AddExpenseScreen = ({ navigation }) => {
   const route = useRoute();
-  const [name, setName] = useState(route.params?.expense?.category || '@Exemplo_teste');
+  const [name, setName] = useState(route.params?.expense?.category);
   const [category, setCategory] = useState(route.params?.expense?.category || '');
   const [amount, setAmount] = useState(route.params?.expense ? `R$${Math.abs(route.params.expense.amount).toFixed(2)}` : 'R$0,00');
   const [expenseDate, setExpenseDate] = useState(route.params?.expense ? new Date(route.params.expense.date) : new Date('2000-12-20'));
@@ -35,8 +37,11 @@ const AddExpenseScreen = ({ navigation }) => {
   const [useCurrentLocation, setUseCurrentLocation] = useState(false);
   const [rating, setRating] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [alertVisible, setAlertVisible] = useState(false); // Add this state
+  const [alertMessage, setAlertMessage] = useState(''); // Add this state
   const nav = useNavigation();
   const isEditing = route.params?.isEditing || false;
+  const fromExpenseStatement = route.params?.fromExpenseStatement || false;
 
   useEffect(() => {
     if (route.params?.selectedAddress) {
@@ -86,8 +91,13 @@ const AddExpenseScreen = ({ navigation }) => {
             <ActivityIndicator size="large" color="#FFFFFF" />
           </View>
         )}
-        <View style={styles.backButtonContainer}>
+        <View style={styles.headerContainer}>
           <BackButton color="white" />
+          <View style={styles.headerTitleContainer}>
+            <Text style={styles.headerTitle}>
+              {isEditing ? "Manutenção de Despesa" : "Adicionar Despesa"}
+            </Text>
+          </View>
         </View>
         <ScrollView style={styles.formContainer} contentContainerStyle={styles.scrollViewContent}>
           <View style={styles.inputGroup}>
@@ -200,18 +210,34 @@ const AddExpenseScreen = ({ navigation }) => {
             />
           </View>
 
+          {isEditing && fromExpenseStatement && (
+            <TouchableOpacity
+              style={styles.deleteButton}
+              onPress={() => {
+                console.log('Despesa excluída:', { name, category, amount, expenseDate, validityDate });
+                setAlertMessage('Despesa excluída com sucesso!');
+                setAlertVisible(true); // Show the custom alert
+              }}
+            >
+              <Text style={styles.deleteButtonText}>Excluir</Text>
+            </TouchableOpacity>
+          )}
           <CustomButton
-            label={isEditing ? "Salvar" : "Adicionar"}
+            label={isEditing && fromExpenseStatement ? "Salvar" : "Adicionar"}
             onPress={() => {
-              if (isEditing) {
+              if (isEditing && fromExpenseStatement) {
                 console.log('Despesa salva:', { name, category, amount, expenseDate, validityDate });
+                setAlertMessage('Despesa salva com sucesso!');
               } else {
                 console.log('Despesa adicionada:', { name, category, amount, expenseDate, validityDate });
+                setAlertMessage('Despesa adicionada com sucesso!');
               }
+              setAlertVisible(true); // Show the custom alert
             }}
             gradientColors={['#FFFFFF', '#FFFFFF']}
             textColor="#1937FE"
             iconColor="#1937FE" 
+            style={styles.commonButton} // Ensure this line is present
           />
         </ScrollView>
 
@@ -239,6 +265,12 @@ const AddExpenseScreen = ({ navigation }) => {
           />
         )}
       </LinearGradient>
+      <CustomAlert
+        visible={alertVisible}
+        title={alertMessage}
+        message=""
+        onClose={() => setAlertVisible(false)}
+      />
     </View>
   );
 };
@@ -261,22 +293,20 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     paddingHorizontal: 33,
-    marginTop: 138,
+    marginTop: 120,
   },
   inputGroup: {
     marginBottom: 25,
   },
   label: {
     color: '#B9B9B9',
-    fontSize: 14,
-    fontFamily: 'Montserrat',
+    fontSize: moderateScale(14),
     fontWeight: '700',
     marginBottom: 8,
   },
   input: {
     color: '#FFFFFF',
-    fontSize: 14,
-    fontFamily: 'Montserrat',
+    fontSize: moderateScale(14),
     fontWeight: '700',
     borderBottomWidth: 1,
     borderBottomColor: '#FFFFFF',
@@ -286,9 +316,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     flex: 1,
-  },
-  buttonText: {
-    fontSize: 12, // Reduced font size
   },
   locationContainer: {
     flexDirection: 'row',
@@ -313,7 +340,6 @@ const styles = StyleSheet.create({
   checkboxText: {
     color: '#FFFFFF',
     fontSize: 14,
-    fontFamily: 'Montserrat',
     fontWeight: '700',
   },
   button: {
@@ -344,6 +370,56 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 5,
+  },
+  deleteButton: {
+    backgroundColor: '#FF0000',
+    padding: 15,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginTop: 30,
+    borderRadius: 40,
+  },
+  deleteButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    position: 'absolute',
+    top: hp(7.5),
+    left: wp(5.3),
+    right: wp(5.3),
+    zIndex: 1,
+  },
+  headerTitleContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: -wp(5.3), // Adjust margin to center the title
+  },
+  headerTitle: {
+    color: '#FFFFFF',
+    fontSize: moderateScale(20),
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  customButton: {
+    width: '90%', // Adjust the width to ensure the button is not cut off
+    alignSelf: 'center', // Center the button horizontally
+  },
+  buttonContainer: {
+    position: 'absolute',
+    bottom: hp(5), // Move the button container lower on the screen
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+  },
+  commonButton: {
+    width: '85%', // Ensure both buttons take up the same width
+    alignSelf: 'center',
+    marginBottom: hp(2), // Add margin to separate buttons
   },
 });
 

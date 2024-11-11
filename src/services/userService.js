@@ -1,4 +1,4 @@
-const supabase = require('./supabaseClient');
+const { supabase } = require('./supabaseClient'); // Adjusted import
 
 const uploadImage = async (userId, profileImage) => {
   if (!profileImage) {
@@ -19,6 +19,7 @@ const uploadImage = async (userId, profileImage) => {
     throw new Error(`Error uploading image: ${uploadError.message}`);
   }
 
+  console.log('File data:', fileData);
   return `${supabase.storageUrl}/profile-images/${fileName}`;
 };
 
@@ -55,7 +56,17 @@ const signUpUser = async (email, password, username, fullName, birthdate, profil
     throw new Error(`Error inserting profile: ${insertError.message}`);
   }
 
-  return signUpData;
+  const { data: profileData, error: fetchError } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', userId)
+    .single();
+
+  if (fetchError) {
+    throw new Error(`Error fetching profile: ${fetchError.message}`);
+  }
+
+  return { user: signUpData.user, profile: profileData };
 };
 
 module.exports = { signUpUser, uploadImage };

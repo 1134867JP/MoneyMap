@@ -13,7 +13,7 @@ import SignUpScreen from './src/screens/SignUpScreen';
 import ForgotPassword from './src/screens/ForgotPasswordScreen';
 import NotificationsScreen from './src/screens/NotificationScreen';
 import AddExpenseScreen from './src/screens/AddExpenseScreen';
-import AddIncome from './src/screens/AddIncomeScreen';
+import AddIncomeScreen from './src/screens/AddIncomeScreen';
 import ExpenseStatementScreen from './src/screens/ExpenseStatementScreen';
 import IncomeStatementScreen from './src/screens/IncomeStatementScreen';
 import { UserProvider } from './src/contexts/userContext';
@@ -89,8 +89,8 @@ const App = () => {
               options={{ headerShown: false }}
             />
             <Stack.Screen
-              name="AddIncome"
-              component={AddIncome}
+              name="AddIncomeScreen"
+              component={AddIncomeScreen}
               options={{ headerShown: false }}
             />
             <Stack.Screen

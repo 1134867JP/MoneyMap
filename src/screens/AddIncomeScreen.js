@@ -14,18 +14,20 @@ import { Picker } from '@react-native-picker/picker';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import CustomButton from '../components/CustomButton';
 import BackButton from '../components/BackButton';
-import { wp, hp, scale, verticalScale, moderateScale } from '../utils/dimensions'; // Import utility functions
+import CustomAlert from '../components/CustomAlert'; // Add this import
+import { wp, hp, scale, verticalScale, moderateScale } from '../utils/dimensions';
 
-const { width } = Dimensions.get('window');
-
-const AddIncomeScreen = ({ navigation }) => {
-  const [name, setName] = useState('@Exemplo_teste');
-  const [category, setCategory] = useState('');
-  const [amount, setAmount] = useState('R$0,00');
-  const [incomeDate, setIncomeDate] = useState(new Date('2000-12-20'));
+const AddIncomeScreen = ({ navigation, route }) => {
+  const { income, isEditing, title } = route.params || {};
+  const [name, setName] = useState(income?.category || '@Exemplo_teste');
+  const [category, setCategory] = useState(income?.category || '');
+  const [amount, setAmount] = useState(income ? `R$${Math.abs(income.amount).toFixed(2)}` : 'R$0,00');
+  const [incomeDate, setIncomeDate] = useState(income ? new Date(income.date) : new Date('2000-12-20'));
   const [validityDate, setValidityDate] = useState(new Date('2001-12-20'));
   const [showIncomeDatePicker, setShowIncomeDatePicker] = useState(false);
   const [showValidityDatePicker, setShowValidityDatePicker] = useState(false);
+  const [alertVisible, setAlertVisible] = useState(false); // Add this state
+  const [alertMessage, setAlertMessage] = useState(''); // Add this state
 
   return (
     <View style={styles.container}>
@@ -38,6 +40,7 @@ const AddIncomeScreen = ({ navigation }) => {
         <View style={styles.backButtonContainer}>
           <BackButton color="white" />
         </View>
+        <Text style={styles.title}>{isEditing ? title : 'Adicionar Receita'}</Text>
         <ScrollView style={styles.formContainer} contentContainerStyle={styles.scrollContent}>
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Nome da Receita*</Text>
@@ -98,21 +101,38 @@ const AddIncomeScreen = ({ navigation }) => {
             </TouchableOpacity>
           </View>
         </ScrollView>
-
         <View style={styles.buttonContainer}>
+          {isEditing && (
+            <TouchableOpacity
+              style={[styles.deleteButton, styles.commonButton]}
+              onPress={() => {
+                console.log('Receita excluída:', { name, category, amount, incomeDate, validityDate });
+                setAlertMessage('Receita excluída com sucesso!');
+                setAlertVisible(true); // Show the custom alert
+              }}
+            >
+              <Text style={styles.deleteButtonText}>Excluir</Text>
+            </TouchableOpacity>
+          )}
           <CustomButton
-            label="Finalizar"
+            label={isEditing ? "Salvar" : "Adicionar"}
             onPress={() => {
-              console.log('Finalizado!');
+              if (isEditing) {
+                console.log('Receita salva:', { name, category, amount, incomeDate, validityDate });
+                setAlertMessage('Receita salva com sucesso!');
+              } else {
+                console.log('Receita adicionada:', { name, category, amount, incomeDate, validityDate });
+                setAlertMessage('Receita adicionada com sucesso!');
+              }
+              setAlertVisible(true); // Show the custom alert
               navigation.goBack();
             }}
-            style={[styles.button]}
+            style={styles.customButton} // Ensure this line is present
             gradientColors={['#FFFFFF', '#FFFFFF']} // Set gradient colors to white
             textColor="#1937FE" // Set text color to black for contrast
             iconColor="#1937FE" // Set icon color to black for contrast
           />
         </View>
-
         {showIncomeDatePicker && (
           <DateTimePicker
             value={incomeDate}
@@ -136,6 +156,12 @@ const AddIncomeScreen = ({ navigation }) => {
             }}
           />
         )}
+        <CustomAlert
+          visible={alertVisible}
+          title={alertMessage}
+          message=""
+          onClose={() => setAlertVisible(false)}
+        />
       </LinearGradient>
     </View>
   );
@@ -149,21 +175,13 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 0,
   },
-  statusBarTime: {
-    position: 'absolute',
-    top: verticalScale(29.55),
-    left: wp(8),
-    fontSize: scale(15),
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
   formContainer: {
-    paddingHorizontal: wp(8.8),
-    marginTop: hp(17),
+    paddingHorizontal: wp(8),
+    marginTop: hp(8),
   },
   scrollContent: {
-    paddingBottom: hp(10), // Add padding to the bottom of the ScrollView
-    flexGrow: 1, // Ensure the ScrollView takes up the remaining space
+    paddingBottom: hp(10),
+    flexGrow: 1,
   },
   inputGroup: {
     marginBottom: hp(3),
@@ -171,14 +189,12 @@ const styles = StyleSheet.create({
   label: {
     color: '#B9B9B9',
     fontSize: scale(14),
-    fontFamily: 'Montserrat',
     fontWeight: '700',
     marginBottom: hp(1),
   },
   input: {
     color: '#FFFFFF',
     fontSize: scale(14),
-    fontFamily: 'Montserrat',
     fontWeight: '700',
     borderBottomWidth: 1,
     borderBottomColor: '#FFFFFF',
@@ -201,10 +217,19 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     position: 'absolute',
-    bottom: hp(5), // Position the button container at the bottom
+    bottom: hp(5), // Move the button container lower on the screen
     left: 0,
     right: 0,
     alignItems: 'center',
+  },
+  commonButton: {
+    width: '85%', // Ensure both buttons take up the same width
+    alignSelf: 'center',
+    marginBottom: hp(2), // Add magin to separate buttons
+  },
+  customButton: {
+    width: '90%', // Adjust the width to ensure the button is not cut off
+    alignSelf: 'center', // Center the button horizontally
   },
   button: {
     alignSelf: 'center',
@@ -217,6 +242,26 @@ const styles = StyleSheet.create({
     top: hp(7.5),
     left: wp(5.3),
     zIndex: 1,
+  },
+  title: {
+    fontSize: 20,
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginVertical: 20,
+    marginTop: hp(8), // Add marginTop to move the title down
+  },
+  deleteButton: {
+    backgroundColor: '#FF0000',
+    padding: 15,
+    borderRadius: 40,
+    alignItems: 'center',
+    marginTop: hp(16),
+  },
+  deleteButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
   },
 });
 

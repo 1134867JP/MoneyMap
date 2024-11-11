@@ -101,19 +101,16 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   transactionCategory: {
-    fontFamily: 'Montserrat',
     fontWeight: '400',
     fontSize: 18,
     color: '#FFFFFF',
   },
   transactionDate: {
-    fontFamily: 'Montserrat',
     fontWeight: '400',
     fontSize: 12,
     color: '#80E0FF',
   },
   transactionAmount: {
-    fontFamily: 'Montserrat',
     fontWeight: '400',
     fontSize: 16,
     color: '#FFFFFF',

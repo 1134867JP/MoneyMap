@@ -55,15 +55,15 @@ export default CustomButton;
 const styles = StyleSheet.create({
   button: {
     marginTop: 20,
-    borderRadius: 30,  // Aplicando borderRadius diretamente no botão
-    overflow: 'hidden',  // Para garantir que as bordas arredondadas sejam aplicadas corretamente
-  },
+    borderRadius: 30,  
+    overflow: 'hidden',
+  }, 
   gradientButton: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     height: '100%',
-    borderRadius: 30,  // Garantindo que o gradiente também tenha o borderRadius
+    borderRadius: 30,
     paddingHorizontal: 20,
   },
   buttonText: {

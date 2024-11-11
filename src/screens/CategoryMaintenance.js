@@ -6,6 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import BackButton from '../components/BackButton';
 import { wp, hp, scale, verticalScale, moderateScale } from '../utils/dimensions';
 import CustomButton from '../components/CustomButton'; // Import CustomButton
+import CustomAlert from '../components/CustomAlert'; // Add CustomAlert import
 
 const CategoryMaintenance = ({ navigation, route }) => {
   const [categories, setCategories] = useState([]);
@@ -13,6 +14,8 @@ const CategoryMaintenance = ({ navigation, route }) => {
   const [selectedColor, setSelectedColor] = useState('Amarelo'); // Cor padrão
   const [editingIndex, setEditingIndex] = useState(null);
   const [isAdding, setIsAdding] = useState(false);
+  const [alertVisible, setAlertVisible] = useState(false); // Add state for alert visibility
+  const [alertMessage, setAlertMessage] = useState(''); // Add state for alert message
 
   useEffect(() => {
     if (route.params?.category) {
@@ -28,7 +31,8 @@ const CategoryMaintenance = ({ navigation, route }) => {
 
   const handleAddCategory = () => {
     if (categoryName.trim() === '') {
-      Alert.alert('Erro', 'O nome da categoria não pode estar vazio.');
+      setAlertMessage('O nome da categoria não pode estar vazio.');
+      setAlertVisible(true);
       return;
     }
 
@@ -44,6 +48,8 @@ const CategoryMaintenance = ({ navigation, route }) => {
     }
 
     setCategoryName('');
+    setAlertMessage('Categoria adicionada com sucesso!');
+    setAlertVisible(true);
   };
 
   const handleEditCategory = (index) => {
@@ -82,7 +88,9 @@ const CategoryMaintenance = ({ navigation, route }) => {
           <BackButton color="white" />
         </View>
         <ScrollView style={styles.formContainer} contentContainerStyle={styles.scrollContent}>
-          <Text style={styles.title}>Manutenção de Categorias</Text>
+          <Text style={styles.title}>
+            {isAdding ? 'Adicionar Categoria' : 'Manutenção de Categorias'}
+          </Text>
           <View style={styles.inputContainer}>
             <TextInput
               style={styles.input}
@@ -136,6 +144,15 @@ const CategoryMaintenance = ({ navigation, route }) => {
           )}
         </View>
       </LinearGradient>
+      <CustomAlert
+        visible={alertVisible}
+        title="Sucesso"
+        message={alertMessage}
+        onClose={() => {
+          setAlertVisible(false);
+          navigation.goBack();
+        }}
+      />
     </View>
   );
 };

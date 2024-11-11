@@ -68,7 +68,6 @@ const styles = StyleSheet.create({
     height: 49,
     left: 30,
     top: 92,
-    fontFamily: 'Montserrat',
     fontWeight: '700',
     fontSize: 40,
     lineHeight: 49,
@@ -118,14 +117,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   name: {
-    fontFamily: 'Montserrat',
     fontSize: 14,
     lineHeight: 17,
     color: '#000000',
     marginBottom: 5,
   },
   message: {
-    fontFamily: 'Montserrat',
     fontSize: 16,
     lineHeight: 20,
     color: '#2743FD',

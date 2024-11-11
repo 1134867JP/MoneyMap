@@ -48,13 +48,6 @@ export const validateForm = ({ username, fullName, email, password, confirmPassw
     errors.confirmPasswordError = '';
   }
 
-  if (!birthdate) {
-    errors.birthdateError = 'Data de nascimento é obrigatória.';
-    valid = false;
-  } else {
-    errors.birthdateError = '';
-  }
-
   return { valid, errors };
 };
 
