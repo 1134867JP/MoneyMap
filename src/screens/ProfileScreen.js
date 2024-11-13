@@ -8,6 +8,7 @@ import {
   Image,
   Alert,
   Dimensions,
+  BackHandler,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { supabase } from '../services/supabaseClient';
@@ -19,13 +20,12 @@ import { wp, moderateScale } from '../utils/dimensions'; // Import wp and modera
 const { width, height } = Dimensions.get('window'); // Get the width and height of the screen
 
 const ProfileScreen = ({ navigation }) => {
+  const { userId, userProfile, setUserProfile, logout } = userAuth(); // Get logout from userAuth
   const [username, setUsername] = useState('@Exemplo');
   const [fullName, setFullName] = useState('Exemplo Teste');
   const [birthdate, setBirthdate] = useState('20/09/2000');
   const [profileImage, setProfileImage] = useState(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
-
-  const { userId, userProfile, setUserProfile } = userAuth();
 
   useEffect(() => {
     if (userProfile) {
@@ -35,6 +35,20 @@ const ProfileScreen = ({ navigation }) => {
       setProfileImage(userProfile.profile_image || null);
     }
   }, [userProfile]);
+
+  useEffect(() => {
+    const backAction = () => {
+      navigation.navigate('Launch');
+      return true;
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      backAction
+    );
+
+    return () => backHandler.remove();
+  }, [navigation]);
 
   const handleUpdateProfile = async () => {
     if (userId) {
@@ -84,6 +98,14 @@ const ProfileScreen = ({ navigation }) => {
     if (selectedDate) {
       setBirthdate(selectedDate.toLocaleDateString('pt-BR'));
     }
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Login' }],
+    });
   };
 
   return (
@@ -151,7 +173,7 @@ const ProfileScreen = ({ navigation }) => {
         <Text style={styles.updateText}>Atualizar Perfil</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.logoutButton} onPress={() => navigation.navigate('Login')}>
+      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
         <Text style={styles.logoutText}>Sair</Text>
         <Icon name="logout" size={21} color="#2743FD" />
       </TouchableOpacity>

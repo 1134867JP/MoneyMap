@@ -1,11 +1,11 @@
 const { supabase } = require('./supabaseClient'); // Adjusted import
 
-const uploadImage = async (userId, profileImage) => {
+const uploadImage = async (username, profileImage) => {
   if (!profileImage) {
     return null;
   }
 
-  const fileName = `${userId}-${Date.now()}.jpg`;
+  const fileName = `${username}-${Date.now()}.jpg`;
   const fileBuffer = profileImage.buffer;
 
   const { data: fileData, error: uploadError } = await supabase.storage
@@ -20,7 +20,7 @@ const uploadImage = async (userId, profileImage) => {
   }
 
   console.log('File data:', fileData);
-  return `${supabase.storageUrl}/profile-images/${fileName}`;
+  return `${supabase.storageUrl}/object/public/${fileData.fullPath}`;
 };
 
 const signUpUser = async (email, password, username, fullName, birthdate, profileImage) => {
@@ -30,6 +30,9 @@ const signUpUser = async (email, password, username, fullName, birthdate, profil
   });
 
   if (signUpError) {
+    if (signUpError.message === 'User already registered') {
+      return { error: 'Usuário já registrado. Por favor, faça login.' };
+    }
     throw new Error(`Error signing up: ${signUpError.message}`);
   }
 
@@ -37,7 +40,7 @@ const signUpUser = async (email, password, username, fullName, birthdate, profil
 
   let profileImageUrl = null;
   if (profileImage) {
-    profileImageUrl = await uploadImage(userId, profileImage);
+    profileImageUrl = await uploadImage(username, profileImage);
   }
 
   const { error: insertError } = await supabase

@@ -2,7 +2,8 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const multer = require('multer');
 const cors = require('cors');
-const { signUpUser } = require('./UserService'); // Adjusted import
+const { signUpUser } = require('./userService');
+const { supabase } = require('./supabaseClient'); // Import supabase client
 
 const app = express();
 const port = 3000;
@@ -28,6 +29,10 @@ app.post('/signup', upload.single('profileImage'), async (req, res) => {
 
   try {
     const signUpData = await signUpUser(email, password, username, fullName, birthdate, profileImage);
+
+    if (signUpData.error) {
+      return res.status(400).json({ error: signUpData.error });
+    }
 
     res.status(200).json({ message: 'Usuário criado com sucesso', user: signUpData.user, profile: signUpData.profile });
   } catch (err) {

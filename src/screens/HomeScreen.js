@@ -19,7 +19,7 @@ import { wp, hp, moderateScale } from '../utils/dimensions';
 const { width } = Dimensions.get("window");
 
 const HomeScreen = ({ navigation }) => {
-  const { userId } = userAuth();
+  const { userId, userProfile } = userAuth();
   const [balance, setBalance] = useState(0);
   const [expenseData, setExpenseData] = useState([
     { name: "Alimentação", amount: 50, color: "red", legendFontColor: "#7F7F7F", legendFontSize: 15 },
@@ -38,6 +38,13 @@ const HomeScreen = ({ navigation }) => {
   });
 
   useEffect(() => {
+    if (userProfile) {
+      setFullName(userProfile.full_name);
+      setProfileImage(userProfile.profile_image);
+    }
+  }, [userProfile]);
+
+  useEffect(() => {
     const fetchFinancialData = async () => {
       const { data: incomes, error: incomesError } = await supabase.from("incomes").select("amount");
       if (incomesError) {
@@ -54,27 +61,7 @@ const HomeScreen = ({ navigation }) => {
       }
     };
 
-    const fetchProfileImage = async () => {
-      if (userId) {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('profile_image, full_name')
-          .eq('id', userId)
-          .single();
-
-        if (error) {
-          console.error("Error fetching profile image:", error);
-        } else {
-          setProfileImage(data.profile_image);
-          setFullName(data.full_name);
-        }
-        console.log(data)
-
-      }
-    };
-
     fetchFinancialData();
-    fetchProfileImage();
   }, [userId]);
 
   return (

@@ -18,7 +18,6 @@ import ExpenseStatementScreen from './src/screens/ExpenseStatementScreen';
 import IncomeStatementScreen from './src/screens/IncomeStatementScreen';
 import { UserProvider } from './src/contexts/userContext';
 import MapExpenseScreen from './src/screens/MapExpenseScreen';
-import WebViewScreen from './src/screens/WebViewScreen';
 import MapScreen from './src/screens/MapScreen';
 import CategoryMaintenance from './src/screens/CategoryMaintenance';
 import { LocationProvider } from './src/contexts/LocationContext';
@@ -112,11 +111,6 @@ const App = () => {
               name="MapScreen" 
               component={MapScreen}
               options={{ headerShown: false }} 
-            />
-            <Stack.Screen
-              name="WebViewScreen"
-              component={WebViewScreen}
-              options={{ headerShown: false }}
             />
             <Stack.Screen
               name="CategoryMaintenance"

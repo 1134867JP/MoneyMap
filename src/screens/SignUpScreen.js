@@ -7,8 +7,9 @@ import * as ImagePicker from 'expo-image-picker';
 import BackButton from '../components/BackButton';
 import CustomButton from '../components/CustomButton';
 import { validateForm } from '../services/helpers';
-import { signUpUser } from '../services/UserService';
+import { signUpUser } from '../services/userService';
 import { wp, hp } from '../utils/dimensions'; // Import utility functions
+import { userAuth } from '../contexts/userContext'; // Corrected import statement
 
 const { width } = Dimensions.get('window');
 
@@ -27,7 +28,8 @@ const SignUpScreen = ({ navigation }) => {
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [confirmPasswordError, setConfirmPasswordError] = useState('');
-  const [birthdateError, setBirthdateError] = useState('');
+
+  const { fetchUserProfile, setUserProfile } = userAuth(); // Use fetchUserProfile and setUserProfile from context
 
   const handleSignUp = async () => {
     const { valid, errors } = validateForm({
@@ -44,18 +46,52 @@ const SignUpScreen = ({ navigation }) => {
     setEmailError(errors.emailError);
     setPasswordError(errors.passwordError);
     setConfirmPasswordError(errors.confirmPasswordError);
-    setBirthdateError(errors.birthdateError);
 
     if (valid) {
       try {
-        const signUpData = await signUpUser(email, password, username, fullName, birthdate, profileImage);
+        const formData = new FormData();
+        formData.append('email', email);
+        formData.append('password', password);
+        formData.append('username', username);
+        formData.append('fullName', fullName);
+        formData.append('birthdate', birthdate);
+        if (profileImage) {
+          const uriParts = profileImage.uri.split('.');
+          const fileType = uriParts[uriParts.length - 1];
+          formData.append('profileImage', {
+            uri: profileImage.uri,
+            name: `profile.${fileType}`,
+            type: `image/${fileType}`,
+          });
+        }
 
-        Alert.alert('Sucesso', 'Conta criada com sucesso!');
-        navigation.navigate('HomeTabs'); // Navigate to Home screen
+        const response = await fetch('http://10.0.2.2:3000/signup', { // Use the correct IP for Android emulator
+          method: 'POST',
+          body: formData,
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          await fetchUserProfile(result.user); // Fetch and store user profile data in context
+          setUserProfile(result.profile); // Store profile data in context
+          Alert.alert('Sucesso', 'Conta criada com sucesso!');
+          navigation.navigate('HomeTabs'); // Navigate to Home screen
+        } else {
+          let errorMessage = result.error || 'Ocorreu um erro. Por favor, tente novamente.';
+          if (result.error === 'Usuário já registrado. Por favor, faça login.') {
+            errorMessage = 'Usuário já registrado. Por favor, faça login.';
+            navigation.navigate('Login'); // Navigate to Login screen
+          }
+          Alert.alert('Erro', errorMessage);
+        }
       } catch (error) {
         console.log(error);
         Alert.alert('Erro', 'Ocorreu um erro. Por favor, tente novamente.');
-      } 
+      }
     }
   };
 
@@ -64,7 +100,6 @@ const SignUpScreen = ({ navigation }) => {
       const currentDate = selectedDate || new Date();
       setShowDatePicker(false);
       setBirthdate(currentDate.toLocaleDateString('pt-BR'));
-      setBirthdateError('');
     } else {
       setShowDatePicker(false);
     }
@@ -246,12 +281,6 @@ const SignUpScreen = ({ navigation }) => {
                   </TouchableOpacity>
                   <View style={styles.inputContainer}/>
                 </View>
-                {birthdateError ? (
-                  <View style={styles.errorContainer}>
-                    <Icon name="error-outline" size={16} color="red" />
-                    <Text style={styles.errorText}>{birthdateError}</Text>
-                  </View>
-                ) : null}
                 {showDatePicker && (
                   <DateTimePicker
                     value={new Date()}

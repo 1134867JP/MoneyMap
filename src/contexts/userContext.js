@@ -16,12 +16,18 @@ export const UserProvider = ({ children }) => {
         .eq('id', user.id)
         .single();
 
-      if (error) {
+      if (error && error.code !== 'PGRST116') {
         console.error('Erro ao buscar perfil:', error);
       } else {
         setUserProfile(data);
       }
     }
+  };
+
+  const logout = async () => {
+    await supabase.auth.signOut();
+    setUserId(null);
+    setUserProfile(null);
   };
 
   useEffect(() => {
@@ -44,12 +50,14 @@ export const UserProvider = ({ children }) => {
     });
 
     return () => {
-      authListener.unsubscribe();
+      if (authListener && authListener.subscription) {
+        authListener.subscription.unsubscribe();
+      }
     };
   }, []);
 
   return (
-    <UserContext.Provider value={{ userId, userProfile, setUserProfile, fetchUserProfile }}>
+    <UserContext.Provider value={{ userId, userProfile, setUserProfile, fetchUserProfile, logout }}>
       {children}
     </UserContext.Provider>
   );

@@ -1,28 +1,40 @@
 import React, { useEffect, useState } from 'react';
 import { AuthContext } from './AuthContext';
-import { getAuth } from 'firebase/auth'; // Adjusted import
-
-const auth = getAuth(); // Initialize auth
+import { supabase } from '../services/supabaseClient'; // Adjusted import
 
 const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const authListener = auth.onAuthStateChanged((user) => {
+    const fetchCurrentUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
+    };
+
+    fetchCurrentUser();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        setUser(session.user);
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+      }
     });
 
-    if (typeof authListener.unsubscribe === 'function') {
-      return () => authListener.unsubscribe();
-    } else if (typeof authListener === 'function') {
-      return authListener;
-    } else {
-      console.warn('authListener does not have an unsubscribe function');
-    }
+    return () => {
+      if (authListener) {
+        authListener.unsubscribe();
+      }
+    };
   }, []);
 
+  const logout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+  };
+
   return (
-    <AuthContext.Provider value={{ user }}>
+    <AuthContext.Provider value={{ user, logout }}>
       {children}
     </AuthContext.Provider>
   );
