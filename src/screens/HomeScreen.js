@@ -11,7 +11,6 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import CustomButton from "../components/CustomButton";
 import { PieChart, BarChart } from "react-native-chart-kit";
-import { supabase } from "../services/supabaseClient";
 import { userAuth } from '../contexts/userContext';
 import { Ionicons } from '@expo/vector-icons'; // Add this import
 import { wp, hp, moderateScale } from '../utils/dimensions';
@@ -36,6 +35,21 @@ const HomeScreen = ({ navigation }) => {
       },
     ],
   });
+  const [monthlyData, setMonthlyData] = useState([
+    { month: "Jan", income: 850, expenses: 1150 },
+    { month: "Feb", income: 950, expenses: 1050 },
+    { month: "Mar", income: 1050, expenses: 950 },
+    { month: "Apr", income: 1150, expenses: 850 },
+    { month: "May", income: 1250, expenses: 750 },
+    { month: "Jun", income: 1350, expenses: 650 },
+    { month: "Jul", income: 1450, expenses: 550 },
+    { month: "Aug", income: 1550, expenses: 450 },
+    { month: "Sep", income: 1650, expenses: 350 },
+    { month: "Oct", income: 1750, expenses: 250 },
+    { month: "Nov", income: 1850, expenses: 150 },
+    { month: "Dec", income: 1950, expenses: 100 },
+
+  ]);
 
   useEffect(() => {
     if (userProfile) {
@@ -46,19 +60,48 @@ const HomeScreen = ({ navigation }) => {
 
   useEffect(() => {
     const fetchFinancialData = async () => {
-      const { data: incomes, error: incomesError } = await supabase.from("incomes").select("amount");
+      const { data: incomes, error: incomesError } = await supabase
+        .from("incomes")
+        .select("amount, date");
       if (incomesError) {
         console.error("Error fetching incomes:", incomesError);
-      } else {
-        console.log("Incomes:", incomes);
       }
 
-      const { data: expenses, error: expensesError } = await supabase.from("expenses").select("amount");
+      const { data: expenses, error: expensesError } = await supabase
+        .from("expenses")
+        .select("amount, date");
       if (expensesError) {
         console.error("Error fetching expenses:", expensesError);
-      } else {
-        console.log("Expenses:", expenses);
       }
+
+      const incomeByMonth = {};
+      const expenseByMonth = {};
+
+      incomes.forEach((income) => {
+        const month = new Date(income.date).getMonth();
+        incomeByMonth[month] = (incomeByMonth[month] || 0) + income.amount;
+      });
+
+      expenses.forEach((expense) => {
+        const month = new Date(expense.date).getMonth();
+        expenseByMonth[month] = (expenseByMonth[month] || 0) + expense.amount;
+      });
+
+      // Prepare monthly data
+      const data = [];
+      const months = [
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+      ];
+      for (let i = 0; i < 12; i++) {
+        data.push({
+          month: months[i],
+          income: incomeByMonth[i] || 0,
+          expenses: expenseByMonth[i] || 0,
+        });
+      }
+
+      setMonthlyData(data);
     };
 
     fetchFinancialData();
@@ -90,47 +133,39 @@ const HomeScreen = ({ navigation }) => {
       </TouchableOpacity>
 
       <Text style={styles.greeting}>Bom dia, {fullName}</Text>
-
       <View style={styles.balanceCard}>
         <Text style={styles.balanceTitle}>Suas Finanças</Text>
         <Text style={styles.balanceAmount}>{`R$ ${balance.toFixed(2)}`}</Text>
-        <View style={styles.columns}>
-          <View style={styles.column}>
-            <View style={styles.rectangle18} />
-            <View style={styles.rectangle19} />
-            <Text style={styles.columnLabel}>Jan/24</Text>
+        <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
+          <View style={styles.columns}>
+            {monthlyData.map((item, index) => {
+              const maxAmount = Math.max(
+                ...monthlyData.map((data) => Math.max(data.income, data.expenses))
+              );
+              const incomeHeight = (item.income / maxAmount) * hp("20%");
+              const expensesHeight = (item.expenses / maxAmount) * hp("20%");
+              return (
+                <View key={index} style={styles.monthColumn}>
+                  <View style={styles.barsContainer}>
+                    <View
+                      style={[
+                        styles.rectangle18,
+                        { height: expensesHeight }
+                      ]}
+                    />
+                    <View
+                      style={[
+                        styles.rectangle19,
+                        { height: incomeHeight }
+                      ]}
+                    />
+                  </View>
+                  <Text style={styles.columnLabel}>{item.month}</Text>
+                </View>
+              );
+            })}
           </View>
-          <View style={styles.column}>
-            <View style={styles.rectangle18} />
-            <View style={styles.rectangle19} />
-            <Text style={styles.columnLabel}>Feb/24</Text>
-          </View>
-          <View style={styles.column}>
-            <View style={styles.rectangle18} />
-            <View style={styles.rectangle19} />
-            <Text style={styles.columnLabel}>Mar/24</Text>
-          </View>
-          <View style={styles.column}>
-            <View style={styles.rectangle18} />
-            <View style={styles.rectangle19} />
-            <Text style={styles.columnLabel}>Apr/24</Text>
-          </View>
-          <View style={styles.column}>
-            <View style={styles.rectangle18} />
-            <View style={styles.rectangle19} />
-            <Text style={styles.columnLabel}>May/24</Text>
-          </View>
-          <View style={styles.column}>
-            <View style={styles.rectangle18} />
-            <View style={styles.rectangle19} />
-            <Text style={styles.columnLabel}>Jun/24</Text>
-          </View>
-          <View style={styles.column}>
-            <View style={styles.rectangle18} />
-            <View style={styles.rectangle19} />
-            <Text style={styles.columnLabel}>Jul/24</Text>
-          </View>
-        </View>
+        </ScrollView>
       </View>
 
       <View style={styles.buttonContainer}>
@@ -264,26 +299,19 @@ const styles = StyleSheet.create({
     width: '100%', // Ensure the columns take full width
     height: hp('20%'), // Increased height to accommodate the labels
     flexDirection: "row",
-    justifyContent: "center",
+    justifyContent: "space-around", // Distribute columns evenly
     alignItems: "flex-end",
   },
-  column: {
+  monthColumn: {
     alignItems: "center",
+    flexDirection: "column",
+    width: wp("6%"),
   },
-  rectangle18: {
-    width: wp('2.5%'),
-    height: hp('10.5%'),
-    backgroundColor: "#2D99FF",
-    marginBottom: hp('0.25%'), // Space between the bars
-    marginRight: wp('0.5%'), // Space between the bars horizontally
-  },
-  rectangle19: {
-    width: wp('2.5%'),
-    height: hp('2.75%'),
-    backgroundColor: "#A5F3FF",
-    transform: [{ scaleY: -1 }],
-    marginTop: hp('0.25%'), // Space between the bars
-    marginLeft: wp('5%'), // Space between the bars horizontally
+  barsContainer: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    justifyContent: "center",
+    height: hp("20%"),
   },
   columnLabel: {
     marginTop: hp('1.5%'), // Space between the column and the label
@@ -292,7 +320,7 @@ const styles = StyleSheet.create({
     transform: [{ rotate: "90deg" }],
   },
   buttonContainer: { 
-    marginTop: hp('60%'), // Adjusted to move buttons up
+    marginTop: hp('62%'), // Adjusted to move buttons up
     paddingHorizontal: wp('7%'),
     paddingBottom: hp('10%'), // Adjust padding to account for the tab bar
   },
@@ -307,11 +335,28 @@ const styles = StyleSheet.create({
   },
   smallButtonRow: { 
     flexDirection: "row", 
-    justifyContent: "space-between" 
+    justifyContent: "space-between" ,
   },
   smallButton: {
     width: "48%",
     borderRadius: moderateScale(40),
     height: moderateScale(30), // Further reduced height
+  },
+  rectangle18: {
+    width: wp('2.5%'),
+    height: hp('10.5%'),
+    backgroundColor: "#2D99FF",
+    marginBottom: hp('0.25%'), // Space between the bars
+    marginRight: wp('0.5%'), // Space between the bars horizontally
+    borderRadius: moderateScale(4),
+  },
+  rectangle19: {
+    width: wp('2.5%'),
+    height: hp('2.75%'),
+    backgroundColor: "#A5F3FF",
+    transform: [{ scaleY: -1 }],
+    marginTop: hp('0.25%'), // Space between the bars
+    marginLeft: wp('0.5%'), // Space between the bars horizontally
+    borderRadius: moderateScale(4),
   },
 });

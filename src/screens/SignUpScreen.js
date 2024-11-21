@@ -10,6 +10,9 @@ import { validateForm } from '../services/helpers';
 import { signUpUser } from '../services/userService';
 import { wp, hp } from '../utils/dimensions'; // Import utility functions
 import { userAuth } from '../contexts/userContext'; // Corrected import statement
+import axios from 'axios'; // Add this import statement
+import { request } from '../services/api'; // Import the request function
+import { signUp } from '../services/AuthService'; // Import the signUp function
 
 const { width } = Dimensions.get('window');
 
@@ -29,7 +32,7 @@ const SignUpScreen = ({ navigation }) => {
   const [passwordError, setPasswordError] = useState('');
   const [confirmPasswordError, setConfirmPasswordError] = useState('');
 
-  const { fetchUserProfile, setUserProfile } = userAuth(); // Use fetchUserProfile and setUserProfile from context
+  const { fetchUserProfile, setUserProfile } = userAuth();
 
   const handleSignUp = async () => {
     const { valid, errors } = validateForm({
@@ -49,44 +52,40 @@ const SignUpScreen = ({ navigation }) => {
 
     if (valid) {
       try {
-        const formData = new FormData();
-        formData.append('email', email);
-        formData.append('password', password);
-        formData.append('username', username);
-        formData.append('fullName', fullName);
-        formData.append('birthdate', birthdate);
+        let profileImageUrl = null;
         if (profileImage) {
-          const uriParts = profileImage.uri.split('.');
-          const fileType = uriParts[uriParts.length - 1];
-          formData.append('profileImage', {
+          const formData = new FormData();
+          formData.append('file', {
             uri: profileImage.uri,
-            name: `profile.${fileType}`,
-            type: `image/${fileType}`,
+            name: 'profile.jpg',
+            type: 'image/jpeg',
           });
+
+          const uploadResponse = await request('POST', '/upload', formData);
+          profileImageUrl = uploadResponse.url;
         }
 
-        const response = await fetch('http://10.0.2.2:3000/signup', { // Use the correct IP for Android emulator
-          method: 'POST',
-          body: formData,
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
+        const result = await signUp({
+          email,
+          password,
+          username,
+          fullName,
+          birthdate,
+          profileImage: profileImageUrl,
         });
 
-        const result = await response.json();
-
-        if (response.ok) {
-          await fetchUserProfile(result.user); // Fetch and store user profile data in context
-          setUserProfile(result.profile); // Store profile data in context
-          Alert.alert('Sucesso', 'Conta criada com sucesso!');
-          navigation.navigate('HomeTabs'); // Navigate to Home screen
-        } else {
+        if (result.error) {
           let errorMessage = result.error || 'Ocorreu um erro. Por favor, tente novamente.';
           if (result.error === 'Usuário já registrado. Por favor, faça login.') {
             errorMessage = 'Usuário já registrado. Por favor, faça login.';
-            navigation.navigate('Login'); // Navigate to Login screen
+            navigation.navigate('Login');
           }
           Alert.alert('Erro', errorMessage);
+        } else {
+          await fetchUserProfile(result.user);
+          setUserProfile(result.profile);
+          Alert.alert('Sucesso', 'Conta criada com sucesso!');
+          navigation.navigate('HomeTabs');
         }
       } catch (error) {
         console.log(error);
@@ -317,8 +316,8 @@ const styles = StyleSheet.create({
   },
   backButtonContainer: {
     position: 'absolute',
-    top: hp(7.5), // Adjusted to match AddIncomeScreen
-    left: wp(5.3), // Adjusted to match AddIncomeScreen
+    top: hp(7.5),
+    left: wp(5.3),
     zIndex: 1,
   },
   purpleCircle: {
@@ -342,12 +341,12 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '57deg' }],
   },
   button: {
-    paddingVertical: 8, // Reduced padding
-    paddingHorizontal: 16, // Reduced padding
+    paddingVertical: 8,
+    paddingHorizontal: 16, 
     borderRadius: 5,
   },
   buttonText: {
-    fontSize: 12, // Reduced font size
+    fontSize: 12,
   },
   profileImageContainer: {
     position: 'absolute',
@@ -383,8 +382,8 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   inputContainer: {
-    flexDirection: 'column', // Alterado para coluna para acomodar o label acima do TextInput
-    alignItems: 'flex-start', // Alinhar os itens à esquerda
+    flexDirection: 'column',
+    alignItems: 'flex-start',
     borderBottomWidth: 1,
     borderColor: '#FFFFFF',
     paddingBottom: 5,
@@ -392,11 +391,11 @@ const styles = StyleSheet.create({
   label: {
     color: '#FFFFFF',
     fontSize: 16,
-    marginBottom: 2, // Ajuste o espaçamento entre o label e o TextInput
+    marginBottom: 2,
   },
   input: {
     flex: 1,
-    paddingTop: 5, // Ajuste o espaçamento vertical do TextInput
+    paddingTop: 5,
     fontSize: 16,
     color: '#FFFFFF',
     width: '100%',

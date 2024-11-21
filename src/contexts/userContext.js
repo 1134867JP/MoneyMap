@@ -1,58 +1,57 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '../services/supabaseClient';
+import api from '../services/api';
 
 const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
   const [userId, setUserId] = useState(null);
-  const [userProfile, setUserProfile] = useState(null);
+  const [userProfile, setUserProfileState] = useState(null); // Rename state setter
 
   const fetchUserProfile = async (user) => {
     if (user) {
       setUserId(user.id);
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('username, full_name, birthdate, profile_image')
-        .eq('id', user.id)
-        .single();
-
-      if (error && error.code !== 'PGRST116') {
+      try {
+        console.log(user.id)
+        const response = await api.get(`/profiles/${user.id}`);
+        if (response.status === 200) {
+          setUserProfile(response.data);
+        }
+      } catch (error) {
         console.error('Erro ao buscar perfil:', error);
-      } else {
-        setUserProfile(data);
       }
     }
   };
 
   const logout = async () => {
-    await supabase.auth.signOut();
+    await api.post('/logout');
     setUserId(null);
     setUserProfile(null);
   };
 
+  const setUserProfile = (profile) => {
+    setUserProfileState(profile); // Use renamed state setter
+  };
+
   useEffect(() => {
     const fetchCurrentUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        fetchUserProfile(user);
+      try {
+        const response = await api.get('/current_user');
+        if (response.data.user) {
+          fetchUserProfile(response.data.user);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar usuário atual:', error);
       }
     };
 
     fetchCurrentUser();
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        fetchUserProfile(session.user);
-      } else if (event === 'SIGNED_OUT') {
-        setUserId(null);
-        setUserProfile(null);
-      }
-    });
+    const authListener = () => {
+      // Implement your auth state change listener here
+    };
 
     return () => {
-      if (authListener && authListener.subscription) {
-        authListener.subscription.unsubscribe();
-      }
+      // Clean up the listener if necessary
     };
   }, []);
 

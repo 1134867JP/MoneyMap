@@ -4,9 +4,9 @@ import AuthScreenLayout from '../components/AuthScreenLayout';
 import CustomButton from '../components/CustomButton';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import BackButton from '../components/BackButton';
-import { supabase } from '../services/supabaseClient'; // Importar o cliente do Supabase
-import CustomAlert from '../components/CustomAlert'; // Certifique-se de que o caminho está correto
+import CustomAlert from '../components/CustomAlert'; 
 import { userAuth } from '../contexts/userContext';
+import { login } from '../services/AuthService'; // Import the login function
 
 const { width } = Dimensions.get('window');
 
@@ -18,7 +18,7 @@ const LoginScreen = ({ navigation }) => {
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
 
-  const { fetchUserProfile } = userAuth();
+  const { fetchUserProfile, setUserProfile } = userAuth(); // Import setUserProfile
 
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
@@ -44,33 +44,52 @@ const LoginScreen = ({ navigation }) => {
   }, [footerBottom]);
 
   const handleLogin = async () => {
+    console.log('handleLogin called');
+
     if (!email || !password) {
       setAlertMessage('Por favor, preencha todos os campos.');
       setAlertVisible(true);
       return;
     }
 
-    const { error, data } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      console.log(error);
+    console.log('Email:', email);
+    console.log('Password:', password);
+
+    try {
+      const result = await login(email, password);
+
+      console.log('Response:', result);
+      if (result.error) {
+        let errorMessage = 'Ocorreu um erro. Por favor, tente novamente.';
+        switch (result.error) {
+          case 'Invalid login credentials':
+            errorMessage = 'Credenciais inválidas. Por favor, tente novamente.';
+            break;
+          case 'Email not confirmed':
+            errorMessage = 'O email fornecido não foi confirmado. Verifique sua caixa de entrada.';
+            break;
+          default:
+            errorMessage = 'Ocorreu um erro inesperado. Verifique sua conexão e tente novamente.';
+            break;
+        }
+        setAlertMessage(errorMessage);
+        setAlertVisible(true);
+      } else {
+        const userData = result.user;
+        const userProfile = result.profile;
+        await fetchUserProfile(userData);
+        setUserProfile(userProfile); // Save user profile in context
+        navigation.navigate('HomeTabs');
+      }
+    } catch (error) {
+      console.log('Error:', error);
+      console.log('Error details:', error.toJSON());
       let errorMessage = 'Ocorreu um erro. Por favor, tente novamente.';
-      switch (error.message) {
-        case 'Invalid login credentials':
-          errorMessage = 'Credenciais inválidas. Por favor, tente novamente.';
-          break;
-        case 'Email not confirmed':
-          errorMessage = 'O email fornecido não foi confirmado. Verifique sua caixa de entrada.';
-          break;
-        default:
-          errorMessage = 'Ocorreu um erro inesperado. Verifique sua conexão e tente novamente.';
-          break;
+      if (error.message === 'Network Error') {
+        errorMessage = 'Erro de rede. Verifique sua conexão e tente novamente.';
       }
       setAlertMessage(errorMessage);
       setAlertVisible(true);
-    } else {
-      const userData = data.user;
-      await fetchUserProfile(userData); // Fetch and store user profile data in context
-      navigation.navigate('HomeTabs');
     }
   };
 
@@ -109,7 +128,7 @@ const LoginScreen = ({ navigation }) => {
                   secureTextEntry={!showPassword}
                   placeholderTextColor="#AAA"
                   returnKeyType="done"
-                  onSubmitEditing={handleLogin} // Adiciona a funcionalidade de login ao pressionar "OK"
+                  onSubmitEditing={handleLogin}
                 />
                 <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
                   <Icon
@@ -121,7 +140,6 @@ const LoginScreen = ({ navigation }) => {
                 </TouchableOpacity>
               </View>
 
-              {/* Link para recuperação de senha ou cadastro */}
               <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')} style={styles.forgotPasswordButton}>
                 <Text style={styles.forgotPasswordText}>
                   Esqueceu sua senha? Clique aqui!
@@ -131,13 +149,9 @@ const LoginScreen = ({ navigation }) => {
           </View>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
-
-      {/* Botão de login fixo na parte inferior */}
       <Animated.View style={[styles.footer, { bottom: footerBottom }]}>
         <CustomButton label="Entrar" onPress={handleLogin} />
       </Animated.View>
-
-      {/* Custom Alert */}
       <CustomAlert
         visible={alertVisible}
         title={'Atenção'}
@@ -161,14 +175,14 @@ const styles = StyleSheet.create({
     width: width * 0.85,
   },
   passwordContainer: {
-    marginBottom: 10, // Reduz a margem inferior do campo de senha
+    marginBottom: 10,
   },
   input: {
     flex: 1,
     paddingVertical: 10,
     fontSize: 16,
     color: '#333',
-    textAlign: 'left', // Alinha o texto à esquerda
+    textAlign: 'left',
   },
   iconRight: {
     marginLeft: 10,
@@ -176,7 +190,7 @@ const styles = StyleSheet.create({
   forgotPasswordButton: {
     marginLeft: 30,
     paddingVertical: 10,
-    alignSelf: 'flex-start', // Alinha o botão à esquerda
+    alignSelf: 'flex-start',
   },
   forgotPasswordText: {
     color: '#0072ff',
@@ -189,15 +203,15 @@ const styles = StyleSheet.create({
     right: 0,
     alignItems: 'center',
     padding: 10,
-    backgroundColor: 'transparent', // Remove o fundo para evitar divisória
+    backgroundColor: 'transparent',
   },
   button: {
-    paddingVertical: 8, // Reduced padding
-    paddingHorizontal: 16, // Reduced padding
+    paddingVertical: 8, 
+    paddingHorizontal: 16,
     borderRadius: 5,
   },
   buttonText: {
-    fontSize: 12, // Reduced font size
+    fontSize: 12,
   },
   backButtonContainer: {
     position: 'absolute',

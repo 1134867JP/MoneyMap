@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, TextInput, Text, StyleSheet, Dimensions, Alert, Keyboard, Animated } from 'react-native';
 import AuthScreenLayout from '../components/AuthScreenLayout';
-import { supabase } from '../services/supabaseClient'; // Importar o cliente do Supabase
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import CustomButton from '../components/CustomButton';
 import CustomAlert from '../components/CustomAlert';
