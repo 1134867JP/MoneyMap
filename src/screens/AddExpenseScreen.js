@@ -16,7 +16,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import CustomButton from '../components/CustomButton';
 import BackButton from '../components/BackButton';
 import { CheckBox } from 'react-native-elements';
-import CustomRating from '../components/CustomRating'; // Add this import
+import { AirbnbRating } from 'react-native-ratings';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import { wp, hp, moderateScale } from '../utils/dimensions';
@@ -200,8 +200,9 @@ const AddExpenseScreen = ({ navigation }) => {
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Avaliação</Text>
-            <CustomRating
+            <AirbnbRating
               count={5}
+              reviews={[]}
               defaultRating={0}
               size={20}
               onFinishRating={setRating}
@@ -327,7 +328,9 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   rating: {
+    marginTop: -40,
     alignSelf: 'flex-start',
+    marginBottom: -40
   },
   checkbox: {
     backgroundColor: 'transparent',

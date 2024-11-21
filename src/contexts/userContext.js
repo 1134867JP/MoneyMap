@@ -1,57 +1,58 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import api from '../services/api';
+import { supabase } from '../services/supabaseClient';
 
 const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
   const [userId, setUserId] = useState(null);
-  const [userProfile, setUserProfileState] = useState(null); // Rename state setter
+  const [userProfile, setUserProfile] = useState(null);
 
   const fetchUserProfile = async (user) => {
     if (user) {
       setUserId(user.id);
-      try {
-        console.log(user.id)
-        const response = await api.get(`/profiles/${user.id}`);
-        if (response.status === 200) {
-          setUserProfile(response.data);
-        }
-      } catch (error) {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('username, full_name, birthdate, profile_image')
+        .eq('id', user.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
         console.error('Erro ao buscar perfil:', error);
+      } else {
+        setUserProfile(data);
       }
     }
   };
 
   const logout = async () => {
-    await api.post('/logout');
+    await supabase.auth.signOut();
     setUserId(null);
     setUserProfile(null);
   };
 
-  const setUserProfile = (profile) => {
-    setUserProfileState(profile); // Use renamed state setter
-  };
-
   useEffect(() => {
     const fetchCurrentUser = async () => {
-      try {
-        const response = await api.get('/current_user');
-        if (response.data.user) {
-          fetchUserProfile(response.data.user);
-        }
-      } catch (error) {
-        console.error('Erro ao buscar usuário atual:', error);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        fetchUserProfile(user);
       }
     };
 
     fetchCurrentUser();
 
-    const authListener = () => {
-      // Implement your auth state change listener here
-    };
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        fetchUserProfile(session.user);
+      } else if (event === 'SIGNED_OUT') {
+        setUserId(null);
+        setUserProfile(null);
+      }
+    });
 
     return () => {
-      // Clean up the listener if necessary
+      if (authListener && authListener.subscription) {
+        authListener.subscription.unsubscribe();
+      }
     };
   }, []);
 

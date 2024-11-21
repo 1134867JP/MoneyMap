@@ -1,3 +1,4 @@
+import { supabase } from '../services/supabaseClient';
 
 export const validateForm = ({ username, fullName, email, password, confirmPassword, birthdate }) => {
   let valid = true;

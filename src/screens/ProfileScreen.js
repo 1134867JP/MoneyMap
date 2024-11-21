@@ -11,11 +11,11 @@ import {
   BackHandler,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { supabase } from '../services/supabaseClient';
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { userAuth } from '../contexts/userContext';
 import { wp, moderateScale } from '../utils/dimensions'; // Import wp and moderateScale
-import { logout as apiLogout } from '../services/AuthService'; // Import the logout function from AuthService
 
 const { width, height } = Dimensions.get('window'); // Get the width and height of the screen
 
@@ -101,16 +101,11 @@ const ProfileScreen = ({ navigation }) => {
   };
 
   const handleLogout = async () => {
-    try {
-      await apiLogout();
-      await logout();
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'Login' }],
-      });
-    } catch (error) {
-      Alert.alert('Erro', 'Não foi possível sair.');
-    }
+    await logout();
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Login' }],
+    });
   };
 
   return (

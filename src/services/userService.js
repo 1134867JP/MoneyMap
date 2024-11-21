@@ -1,40 +1,75 @@
-const axios = require('axios');
+const { supabase } = require('./supabaseClient'); // Adjusted import
 
 const uploadImage = async (username, profileImage) => {
   if (!profileImage) {
     return null;
   }
 
-  const formData = new FormData();
-  formData.append('file', profileImage.buffer, `${username}-${Date.now()}.jpg`);
+  const fileName = `${username}-${Date.now()}.jpg`;
+  const fileBuffer = profileImage.buffer;
 
-  try {
-    const response = await axios.post('http://192.168.1.32:3000/upload', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
+  const { data: fileData, error: uploadError } = await supabase.storage
+    .from('profile-images')
+    .upload(`profile-images/${fileName}`, fileBuffer, {
+      upsert: false,
+      contentType: 'image/jpeg',
     });
-    return response.data.url;
-  } catch (error) {
-    throw new Error(`Error uploading image: ${error.message}`);
+
+  if (uploadError) {
+    throw new Error(`Error uploading image: ${uploadError.message}`);
   }
+
+  console.log('File data:', fileData);
+  return `${supabase.storageUrl}/object/public/${fileData.fullPath}`;
 };
 
 const signUpUser = async (email, password, username, fullName, birthdate, profileImage) => {
-  try {
-    const response = await axios.post('http://192.168.1.32:3000/signup', {
-      email,
-      password,
-      username,
-      fullName,
-      birthdate,
-      profileImage,
-    });
+  const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+    email,
+    password,
+  });
 
-    return response.data;
-  } catch (error) {
-    throw new Error(`Error signing up: ${error.message}`);
+  if (signUpError) {
+    if (signUpError.message === 'User already registered') {
+      return { error: 'Usuário já registrado. Por favor, faça login.' };
+    }
+    throw new Error(`Error signing up: ${signUpError.message}`);
   }
+
+  const userId = signUpData.user.id;
+
+  let profileImageUrl = null;
+  if (profileImage) {
+    profileImageUrl = await uploadImage(username, profileImage);
+  }
+
+  const { error: insertError } = await supabase
+    .from('profiles')
+    .insert([
+      {
+        id: userId,
+        username,
+        full_name: fullName,
+        birthdate: new Date(birthdate.split('/').reverse().join('-')).toISOString().split('T')[0],
+        profile_image: profileImageUrl,
+      },
+    ]);
+
+  if (insertError) {
+    throw new Error(`Error inserting profile: ${insertError.message}`);
+  }
+
+  const { data: profileData, error: fetchError } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', userId)
+    .single();
+
+  if (fetchError) {
+    throw new Error(`Error fetching profile: ${fetchError.message}`);
+  }
+
+  return { user: signUpData.user, profile: profileData };
 };
 
 module.exports = { signUpUser, uploadImage };

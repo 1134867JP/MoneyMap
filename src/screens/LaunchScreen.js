@@ -1,16 +1,39 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Text, StyleSheet, Dimensions, View } from 'react-native';
-import Svg, { Defs, LinearGradient, Stop, Text as SvgText } from 'react-native-svg'; 
+import Svg, { Defs, LinearGradient, Stop, Text as SvgText } from 'react-native-svg'; // Importando SVG para gradiente no texto
 import AuthScreenLayout from '../components/AuthScreenLayout'; 
 import CustomButton from '../components/CustomButton'; 
 
 const { width } = Dimensions.get('window');
 
 const LaunchScreen = ({ navigation }) => {
+  const [displayedText, setDisplayedText] = useState('');
+  const fullText = 'MONEYMAP'; // Texto completo
+
+  useEffect(() => {
+    let currentIndex = 0;
+    const typeWriter = () => {
+      if (currentIndex < fullText.length) {
+        setDisplayedText((prev) => prev + fullText[currentIndex]);
+        currentIndex++;
+        setTimeout(typeWriter, 100);
+      } else {
+        setTimeout(() => {
+          setDisplayedText('');
+          currentIndex = 0;
+          setTimeout(typeWriter, 300); // Reinicia o efeito
+        }, 10000); // Pausa antes de reiniciar a animação
+      }
+    };
+
+    const timeoutId = setTimeout(typeWriter, 300);
+    return () => clearTimeout(timeoutId);
+  }, []);
+
   return (
     <AuthScreenLayout logoSource={require('../../assets/logo.png')}>
       <View style={styles.container}>
-        <Text style={styles.title}>Bem-vindo ao</Text>
+        <Text style={styles.title}>Bem Vindo ao</Text>
         <View style={styles.subtitleContainer}>
           <Svg height="100" width={width * 0.9}>
             <Defs>
@@ -23,12 +46,12 @@ const LaunchScreen = ({ navigation }) => {
               fill="url(#grad)"
               fontSize="55"
               fontWeight="bold"
-              x="53%"
-              y="50%"
-              textAnchor="middle"
-              alignmentBaseline="middle"
+              x="55%" // Centraliza horizontalmente
+              y="50%" // Centraliza verticalmente
+              textAnchor="middle" // Ancora o texto ao centro
+              alignmentBaseline="middle" // Alinha o texto verticalmente ao meio
             >
-              MONEYMAP
+              {displayedText}
             </SvgText>
           </Svg>
         </View>
@@ -59,16 +82,23 @@ const styles = StyleSheet.create({
   },
   title: {
     marginTop: -200,
+    textAlign: 'left',
     fontSize: 30,
     fontWeight: '400',
-    color: '#000',
+    lineHeight: 36,
+    background: 'linear-gradient(146.2deg, #FF73D8 9.38%, #8712CE 47.4%, #4E95FF 84.91%)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    backgroundClip: 'text',
+    textFillColor: 'transparent',
     alignSelf: 'flex-start',
-    marginLeft: 15,
+    marginLeft: 20,
   },
   subtitleContainer: {
     height: 100,
     justifyContent: 'center',
-    alignItems: 'center',
+    alignItems: 'flex-end',
+    marginRight: 20,
   },
   buttonContainer: {
     width: '100%',
