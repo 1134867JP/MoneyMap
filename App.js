@@ -21,6 +21,7 @@ import MapExpenseScreen from './src/screens/MapExpenseScreen';
 import MapScreen from './src/screens/MapScreen';
 import CategoryMaintenance from './src/screens/CategoryMaintenance';
 import { LocationProvider } from './src/contexts/LocationContext';
+import { supabase } from './src/services/supabaseClient';
 
 
 const Stack = createStackNavigator();
@@ -37,6 +38,22 @@ const TabNavigator = () => {
 };
 
 const App = () => {
+
+  useEffect(() => {
+    // Ouvir mudanças na autenticação
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user) {
+        console.log('Usuário logado:', session.user);
+      } else {
+        console.log('Usuário não autenticado');
+      }
+    });
+
+    return () => {
+      authListener?.unsubscribe();  // Desinscrever o ouvinte quando o componente for desmontado
+    };
+  }, []);
+
   useEffect(() => {
     async function prepare() {
       try {

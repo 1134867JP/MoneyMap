@@ -7,6 +7,7 @@ import BackButton from '../components/BackButton';
 import { wp, hp, scale, verticalScale, moderateScale } from '../utils/dimensions';
 import CustomButton from '../components/CustomButton'; // Import CustomButton
 import CustomAlert from '../components/CustomAlert'; // Add CustomAlert import
+import { supabase } from '../services/supabaseClient';
 
 const CategoryMaintenance = ({ navigation, route }) => {
   const [categories, setCategories] = useState([]);
@@ -16,6 +17,66 @@ const CategoryMaintenance = ({ navigation, route }) => {
   const [isAdding, setIsAdding] = useState(false);
   const [alertVisible, setAlertVisible] = useState(false); // Add state for alert visibility
   const [alertMessage, setAlertMessage] = useState(''); // Add state for alert message
+
+  const saveCategory = async () => {
+    // Validar campos obrigatórios
+    if (!categoryName || !selectedColor) {
+      setAlertMessage('Todos os campos são obrigatórios.');
+      setAlertVisible(true);
+      return;
+    }
+  
+    // Obter o usuário autenticado
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user?.id) {
+      setAlertMessage('Erro: usuário não autenticado.');
+      setAlertVisible(true);
+      return;
+    }
+
+    const { categoryType } = route.params;
+  
+    const userId = user.id;
+  
+    try {
+      let tableName = '';
+  
+      // Verifique de qual tela a função foi chamada
+      if (categoryType === 'expenses') {
+        tableName = 'categoriesExpenses'; // Tabela de despesas
+      } else if (categoryType === 'incomes') {
+        tableName = 'categoriesIncomes'; // Tabela de receitas
+      }
+  
+      // Inserir na tabela correta
+      const { data, error } = await supabase.from(tableName).insert([
+        {
+          user_id: userId,
+          name: categoryName.trim(),
+          color: selectedColor,
+          // Não inclua a chave primária (id) aqui, deixe o banco gerar automaticamente
+        },
+      ]);
+  
+      if (error) {
+        console.error('Erro ao salvar categoria:', error);
+        setAlertMessage('Erro ao salvar a categoria. Por favor, tente novamente.');
+        setAlertVisible(true);
+      } else {
+        console.log('Categoria salva com sucesso:', data);
+        setAlertMessage('Categoria salva com sucesso!');
+        setAlertVisible(true);
+  
+        // Redirecionar ou limpar formulário
+        navigation.goBack();
+      }
+    } catch (error) {
+      console.error('Erro inesperado:', error);
+      setAlertMessage('Ocorreu um erro inesperado. Por favor, tente novamente.');
+      setAlertVisible(true);
+    }
+  };
 
   useEffect(() => {
     if (route.params?.category) {
@@ -124,7 +185,7 @@ const CategoryMaintenance = ({ navigation, route }) => {
           {isAdding && (
             <CustomButton
               label="Adicionar Categoria"
-              onPress={handleAddCategory}
+              onPress={saveCategory}
               style={styles.button}
               gradientColors={["#4960F9", "#4033FF"]}
               textStyle={styles.buttonText}

@@ -21,6 +21,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import { wp, hp, moderateScale } from '../utils/dimensions';
 import CustomAlert from '../components/CustomAlert'; // Add this import
+import { supabase } from '../services/supabaseClient';
 
 const { width } = Dimensions.get('window');
 
@@ -39,9 +40,82 @@ const AddExpenseScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [alertVisible, setAlertVisible] = useState(false); // Add this state
   const [alertMessage, setAlertMessage] = useState(''); // Add this state
+  const [categories, setCategories] = useState([]);
   const nav = useNavigation();
   const isEditing = route.params?.isEditing || false;
   const fromExpenseStatement = route.params?.fromExpenseStatement || false;
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('categoriesExpenses') // Your Supabase table name
+          .select('id, name'); // Fields you need to fetch
+
+        if (error) {
+          console.error('Error fetching categories:', error);
+        } else {
+          setCategories(data); // Set the categories
+        }
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  const saveExpense = async () => {
+    // Validar campos obrigatórios
+    if (!name || !category || !amount || !expenseDate) {
+      setAlertMessage('Por favor, preencha todos os campos obrigatórios.');
+      setAlertVisible(true);
+      return;
+    }
+  
+    // Obter o usuário autenticado
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user?.id) {
+      setAlertMessage('Erro: usuário não autenticado.');
+      setAlertVisible(true);
+      return;
+    }
+  
+    const userId = user.id;
+  
+    try {
+      // Inserir na tabela `expenses`
+      const { data, error } = await supabase.from('expenses').insert([
+        {
+          user_id: userId,
+          category_id: parseInt(category, 10),
+          name: name.trim(),
+          amount: parseFloat(amount.replace('R$', '').replace(',', '.')),
+          expense_date: expenseDate.toISOString().split('T')[0],
+          validity_date: validityDate ? validityDate.toISOString().split('T')[0] : null,
+          // Não inclua a chave primária (id) aqui, deixe o banco gerar automaticamente
+        },
+      ]);
+  
+      if (error) {
+        console.error('Erro ao salvar despesa:', error);
+        setAlertMessage('Erro ao salvar a despesa. Por favor, tente novamente.');
+        setAlertVisible(true);
+      } else {
+        console.log('Despesa salva com sucesso:', data);
+        setAlertMessage('Despesa salva com sucesso!');
+        setAlertVisible(true);
+  
+        // Redirecionar ou limpar formulário
+        navigation.goBack();
+      }
+    } catch (error) {
+      console.error('Erro inesperado:', error);
+      setAlertMessage('Ocorreu um erro inesperado. Por favor, tente novamente.');
+      setAlertVisible(true);
+    }
+  };
 
   useEffect(() => {
     if (route.params?.selectedAddress) {
@@ -113,19 +187,19 @@ const AddExpenseScreen = ({ navigation }) => {
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Categoria*</Text>
             <View style={styles.categoryPickerContainer}>
-              <Picker
+            <Picker
                 selectedValue={category}
                 onValueChange={(itemValue) => setCategory(itemValue)}
                 style={[styles.picker, { flex: 1 }]}
               >
                 <Picker.Item label="Selecione uma categoria" value="" />
-                <Picker.Item label="Own data" value="own_data" />
-                <Picker.Item label="Employee reporting to him" value="employee_reporting" />
-                <Picker.Item label="All employees" value="all_employees" />
+                {categories.map((cat) => (
+                  <Picker.Item key={cat.id} label={cat.name} value={cat.id} />
+                ))}
               </Picker>
               <TouchableOpacity
                 style={styles.addButton}
-                onPress={() => navigation.navigate('CategoryMaintenance', { isAdding: true })}
+                onPress={() => navigation.navigate('CategoryMaintenance', { isAdding: true, categoryType: 'expenses'  })}
               >
                 <Icon name="add" size={24} color="#FFFFFF" />
               </TouchableOpacity>
@@ -224,16 +298,7 @@ const AddExpenseScreen = ({ navigation }) => {
           )}
           <CustomButton
             label={isEditing && fromExpenseStatement ? "Salvar" : "Adicionar"}
-            onPress={() => {
-              if (isEditing && fromExpenseStatement) {
-                console.log('Despesa salva:', { name, category, amount, expenseDate, validityDate });
-                setAlertMessage('Despesa salva com sucesso!');
-              } else {
-                console.log('Despesa adicionada:', { name, category, amount, expenseDate, validityDate });
-                setAlertMessage('Despesa adicionada com sucesso!');
-              }
-              setAlertVisible(true); // Show the custom alert
-            }}
+            onPress={saveExpense}
             gradientColors={['#FFFFFF', '#FFFFFF']}
             textColor="#1937FE"
             iconColor="#1937FE" 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -17,6 +17,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import MapIcon from '../components/mapIcon';
 import CustomAlert from '../components/CustomAlert'; // Add CustomAlert import
+import { supabase } from '../services/supabaseClient';
 
 const { width } = Dimensions.get('window');
 
@@ -31,6 +32,49 @@ const ExpenseStatementScreen = ({ navigation }) => {
   const [editingIndex, setEditingIndex] = useState(null);
   const [alertVisible, setAlertVisible] = useState(false); 
   const [alertMessage, setAlertMessage] = useState('');
+  const [totalAmount, setTotalAmount] = useState(0); // Estado para armazenar o total
+  const [loading, setLoading] = useState(true); // Estado para controlar o carregamento
+
+  useEffect(() => {
+    const fetchTotalAmount = async () => {
+      try {
+        // Obter o usuário autenticado
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        
+        if (userError || !user?.id) {
+          console.log('Erro ao obter o usuário');
+          setLoading(false);
+          return;
+        }
+        
+        const userId = user.id;
+
+        // Buscar as despesas do usuário
+        const { data, error } = await supabase
+          .from('expenses')
+          .select('amount')
+          .eq('user_id', userId); // Filtro pelo user_id
+        
+        if (error) {
+          console.error('Erro ao buscar as despesas:', error);
+          setLoading(false);
+          return;
+        }
+
+        // Somar os valores de "amount"
+        const total = data.reduce((sum, expense) => sum + expense.amount, 0);
+        
+        // Atualizar o estado com o total
+        setTotalAmount(total);
+      } catch (error) {
+        console.error('Erro ao calcular o total:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTotalAmount();
+  }, []);
 
   const screenHeight = Dimensions.get('window').height;
   const minimizedHeight = 200; 
@@ -95,7 +139,7 @@ const ExpenseStatementScreen = ({ navigation }) => {
         <View style={styles.containerHeader}>
           <Text style={styles.headerTitle}>Extrato de Despesas</Text>
           <Text style={styles.totalExpenses}>Total de Despesas</Text>
-          <Text style={styles.totalAmount}>R$1.065,50</Text>
+          <Text style={styles.totalAmount}>R${totalAmount.toFixed(2)}</Text>
         </View>
       </LinearGradient>
       <MapIcon />
