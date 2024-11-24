@@ -255,28 +255,19 @@ const IncomeStatementScreen = ({ navigation }) => {
                   </TouchableOpacity>
                 </View>
                 <FlatList
-                  data={sortTransactions(sortOption)}
+                  data={incomes}
                   keyExtractor={item => item.id}
                   renderItem={({ item }) => (
                     <TouchableOpacity
-                      onPress={() => navigation.navigate('AddIncomeScreen', { income: item, isEditing: true, title: 'Manutenção de Receita' })}
+                      onPress={() => navigation.navigate('AddIncomeScreen', { income: item, name: item.name, isEditing: true, title: 'Manutenção de Receita' })}
                     >
                       <View style={styles.incomeItem}>
                         <View style={styles.incomeIconContainer}>
-                          <LinearGradient
-                            colors={getGradientColors(item.category)}
-                            style={styles.incomeIcon}
-                          >
-                            <Icon 
-                              name={getCategoryIcon(item.category)} 
-                              size={24} 
-                              color="#FFFFFF" 
-                            />
-                          </LinearGradient>
+                          
                         </View>
                         <View style={styles.incomeDetails}>
-                          <Text style={styles.incomeCategory}>{item.category}</Text>
-                          <Text style={styles.incomeDate}>{item.date}</Text>
+                          <Text style={styles.incomeCategory}>{item.name}</Text>
+                          <Text style={styles.incomeDate}>{item.income_date}</Text>
                         </View>
                         <Text style={styles.incomeAmount}>R${Math.abs(item.amount).toFixed(2)}</Text>
                       </View>
@@ -296,25 +287,16 @@ const IncomeStatementScreen = ({ navigation }) => {
                   <Text style={styles.minimizedText}>Pesquisar</Text>
                 </TouchableOpacity>
                 <FlatList
-                  data={transactions.slice(0, 2)} // Show first 2 transactions
+                  data={incomes.slice(0, 2)} // Show first 2 transactions
                   keyExtractor={item => item.id}
                   renderItem={({ item }) => (
                     <View style={styles.incomeItem}>
                       <View style={styles.incomeIconContainer}>
-                        <LinearGradient
-                          colors={getGradientColors(item.category)}
-                          style={styles.incomeIcon}
-                        >
-                          <Icon 
-                            name={getCategoryIcon(item.category)} 
-                            size={24} 
-                            color="#FFFFFF" 
-                          />
-                        </LinearGradient>
+                       
                       </View>
                       <View style={styles.incomeDetails}>
-                        <Text style={styles.incomeCategory}>{item.category}</Text>
-                        <Text style={styles.incomeDate}>{item.date}</Text>
+                        <Text style={styles.incomeCategory}>{item.name}</Text>
+                        <Text style={styles.incomeDate}>{item.income_date}</Text>
                       </View>
                       <Text style={styles.incomeAmount}>R${Math.abs(item.amount).toFixed(2)}</Text>
                     </View>

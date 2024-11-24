@@ -27,16 +27,18 @@ const { width } = Dimensions.get('window');
 
 const AddExpenseScreen = ({ navigation }) => {
   const route = useRoute();
-  const [name, setName] = useState(route.params?.expense?.category);
-  const [category, setCategory] = useState(route.params?.expense?.category || '');
-  const [amount, setAmount] = useState(route.params?.expense ? `R$${Math.abs(route.params.expense.amount).toFixed(2)}` : 'R$0,00');
-  const [expenseDate, setExpenseDate] = useState(route.params?.expense ? new Date(route.params.expense.date) : new Date('2000-12-20'));
-  const [validityDate, setValidityDate] = useState(new Date('2001-12-20'));
+  const { expense } = route.params || {};
+  const { recarregarExpenses } = route.params || {};
+  const [name, setName] = useState(expense ? expense.name : '');
+  const [category, setCategory] = useState(expense ? expense.category_id : '');
+  const [amount, setAmount] = useState(expense ? `R$${Math.abs(expense.amount).toFixed(2)}` : 'R$0,00');
+  const [expenseDate, setExpenseDate] = useState(expense ? new Date(expense.expense_date) : new Date('2024-12-20'));
+  const [validityDate, setValidityDate] = useState(expense ? new Date(expense.validity_date) : new Date('2024-12-20'));
   const [showExpenseDatePicker, setShowExpenseDatePicker] = useState(false);
   const [showValidityDatePicker, setShowValidityDatePicker] = useState(false);
   const [location, setLocation] = useState('');
   const [useCurrentLocation, setUseCurrentLocation] = useState(false);
-  const [rating, setRating] = useState(0);
+  const [rating, setRating] = useState(expense ? expense.rating : 0);
   const [loading, setLoading] = useState(false);
   const [alertVisible, setAlertVisible] = useState(false); // Add this state
   const [alertMessage, setAlertMessage] = useState(''); // Add this state
@@ -94,6 +96,7 @@ const AddExpenseScreen = ({ navigation }) => {
           amount: parseFloat(amount.replace('R$', '').replace(',', '.')),
           expense_date: expenseDate.toISOString().split('T')[0],
           validity_date: validityDate ? validityDate.toISOString().split('T')[0] : null,
+          rating: rating,
           // Não inclua a chave primária (id) aqui, deixe o banco gerar automaticamente
         },
       ]);
@@ -114,6 +117,27 @@ const AddExpenseScreen = ({ navigation }) => {
       console.error('Erro inesperado:', error);
       setAlertMessage('Ocorreu um erro inesperado. Por favor, tente novamente.');
       setAlertVisible(true);
+    }
+  };
+
+  const deleteExpense = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('expenses')
+        .delete()
+        .eq('id', expense.id);
+  
+      if (error) {
+        throw error;
+      }
+  
+      console.log('Despesa excluída com sucesso:', data);
+      setAlertMessage('Despesa excluída com sucesso!');
+      setAlertVisible(true);
+      navigation.goBack();
+    
+    } catch (error) {
+      console.error('Erro ao excluir a despesa:', error.message);
     }
   };
 
@@ -287,11 +311,7 @@ const AddExpenseScreen = ({ navigation }) => {
           {isEditing && fromExpenseStatement && (
             <TouchableOpacity
               style={styles.deleteButton}
-              onPress={() => {
-                console.log('Despesa excluída:', { name, category, amount, expenseDate, validityDate });
-                setAlertMessage('Despesa excluída com sucesso!');
-                setAlertVisible(true); // Show the custom alert
-              }}
+              onPress={deleteExpense}
             >
               <Text style={styles.deleteButtonText}>Excluir</Text>
             </TouchableOpacity>

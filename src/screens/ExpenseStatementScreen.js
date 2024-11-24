@@ -33,6 +33,7 @@ const ExpenseStatementScreen = ({ navigation }) => {
   const [alertVisible, setAlertVisible] = useState(false); 
   const [alertMessage, setAlertMessage] = useState('');
   const [totalAmount, setTotalAmount] = useState(0); // Estado para armazenar o total
+  const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true); // Estado para controlar o carregamento
 
   useEffect(() => {
@@ -74,6 +75,42 @@ const ExpenseStatementScreen = ({ navigation }) => {
     };
 
     fetchTotalAmount();
+  }, []);
+
+  useEffect(() => {
+    const fetchExpenses = async () => {
+      try {
+        // Obter o usuário autenticado
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        
+        if (userError || !user?.id) {
+          console.log('Erro ao obter o usuário');
+          setLoading(false);
+          return;
+        }
+        
+        const userId = user.id;
+  
+        // Buscar as despesas do usuário
+        const { data, error } = await supabase
+          .from('expenses')
+          .select('*')
+          .eq('user_id', userId) // Filtra as receitas pelo user_id
+          .order('expense_date', { ascending: false }); // Ordena por data (mais recentes primeiro)
+  
+        if (error) {
+          console.error('Erro ao buscar despesas:', error);
+        } else {
+          setExpenses(data); // Atualiza a lista de receitas
+        }
+      } catch (error) {
+        console.error('Erro ao carregar despesas:', error);
+      } finally {
+        setLoading(false); // Para de mostrar a tela de carregamento
+      }
+    };
+  
+    fetchExpenses();
   }, []);
 
   const screenHeight = Dimensions.get('window').height;
@@ -221,7 +258,7 @@ const ExpenseStatementScreen = ({ navigation }) => {
                   </TouchableOpacity>
                 </View>
                 <FlatList
-                  data={sortTransactions(sortOption)}
+                  data={expenses}
                   keyExtractor={item => item.id}
                   renderItem={({ item }) => (
                     <TouchableOpacity
@@ -229,20 +266,11 @@ const ExpenseStatementScreen = ({ navigation }) => {
                     >
                       <View style={styles.expenseItem}>
                         <View style={styles.expenseIconContainer}>
-                          <LinearGradient
-                            colors={getGradientColors(item.category)}
-                            style={styles.expenseIcon}
-                          >
-                            <Icon 
-                              name={getCategoryIcon(item.category)} 
-                              size={24} 
-                              color="#FFFFFF" 
-                            />
-                          </LinearGradient>
+                          
                         </View>
                         <View style={styles.expenseDetails}>
-                          <Text style={styles.expenseCategory}>{item.category}</Text>
-                          <Text style={styles.expenseDate}>{item.date}</Text>
+                          <Text style={styles.expenseCategory}>{item.name}</Text>
+                          <Text style={styles.expenseDate}>{item.expense_date}</Text>
                         </View>
                         <Text style={styles.expenseAmount}>-R${Math.abs(item.amount).toFixed(2)}</Text>
                       </View>
@@ -262,25 +290,16 @@ const ExpenseStatementScreen = ({ navigation }) => {
                   <Text style={styles.minimizedText}>Pesquisar</Text>
                 </TouchableOpacity>
                 <FlatList
-                  data={transactions.slice(0, 2)}
+                  data={expenses.slice(0, 2)}
                   keyExtractor={item => item.id}
                   renderItem={({ item }) => (
                     <View style={styles.expenseItem}>
                       <View style={styles.expenseIconContainer}>
-                        <LinearGradient
-                          colors={getGradientColors(item.category)}
-                          style={styles.expenseIcon}
-                        >
-                          <Icon 
-                            name={getCategoryIcon(item.category)} 
-                            size={24} 
-                            color="#FFFFFF" 
-                          />
-                        </LinearGradient>
+                        
                       </View>
                       <View style={styles.expenseDetails}>
-                        <Text style={styles.expenseCategory}>{item.category}</Text>
-                        <Text style={styles.expenseDate}>{item.date}</Text>
+                        <Text style={styles.expenseCategory}>{item.name}</Text>
+                        <Text style={styles.expenseDate}>{item.expense_date}</Text>
                       </View>
                       <Text style={styles.expenseAmount}>-R${Math.abs(item.amount).toFixed(2)}</Text>
                     </View>

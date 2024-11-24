@@ -20,10 +20,10 @@ import { supabase } from '../services/supabaseClient';
 
 const AddIncomeScreen = ({ navigation, route }) => {
   const { income, isEditing, title } = route.params || {};
-  const [name, setName] = useState(income?.category || '@Exemplo_teste');
-  const [category, setCategory] = useState(income?.category || '');
+  const [name, setName] = useState(income ? income.name : '');
+  const [category, setCategory] = useState(income ? income.category_id : '');
   const [amount, setAmount] = useState(income ? `R$${Math.abs(income.amount).toFixed(2)}` : 'R$0,00');
-  const [incomeDate, setIncomeDate] = useState(income ? new Date(income.date) : new Date('2000-12-20'));
+  const [incomeDate, setIncomeDate] = useState(income ? new Date(income.income_date) : new Date('2024-12-20'));
   const [validityDate, setValidityDate] = useState(new Date('2001-12-20'));
   const [showIncomeDatePicker, setShowIncomeDatePicker] = useState(false);
   const [showValidityDatePicker, setShowValidityDatePicker] = useState(false);
@@ -102,6 +102,27 @@ const AddIncomeScreen = ({ navigation, route }) => {
     }
   };
 
+  const deleteIncome = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('incomes')
+        .delete()
+        .eq('id', income.id);
+  
+      if (error) {
+        throw error;
+      }
+  
+      console.log('Receita excluída com sucesso:', data);
+      setAlertMessage('Receita excluída com sucesso!');
+      setAlertVisible(true);
+      navigation.goBack();
+    
+    } catch (error) {
+      console.error('Erro ao excluir a receita:', error.message);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <LinearGradient
@@ -174,11 +195,7 @@ const AddIncomeScreen = ({ navigation, route }) => {
           {isEditing && (
             <TouchableOpacity
               style={[styles.deleteButton, styles.commonButton]}
-              onPress={() => {
-                console.log('Receita excluída:', { name, category, amount, incomeDate, validityDate });
-                setAlertMessage('Receita excluída com sucesso!');
-                setAlertVisible(true); // Show the custom alert
-              }}
+              onPress={deleteIncome}
             >
               <Text style={styles.deleteButtonText}>Excluir</Text>
             </TouchableOpacity>
