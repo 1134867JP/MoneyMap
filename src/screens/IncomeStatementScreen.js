@@ -30,6 +30,7 @@ const IncomeStatementScreen = ({ navigation }) => {
   const [totalAmount, setTotalAmount] = useState(0); // Estado para armazenar o total
   const [incomes, setIncomes] = useState([]); // Estado para armazenar as receitas
   const [loading, setLoading] = useState(true); // Estado de carregamento
+  const [categories, setCategories] = useState([]);
 
   const screenHeight = Dimensions.get('window').height;
   const minimizedHeight = 200;
@@ -112,6 +113,41 @@ const IncomeStatementScreen = ({ navigation }) => {
     fetchIncomes();
   }, []);
 
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        // Obter o usuário autenticado
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        
+        if (userError || !user?.id) {
+          console.log('Erro ao obter o usuário');
+          setLoading(false);
+          return;
+        }
+        
+        const userId = user.id;
+  
+        // Buscar as despesas do usuário
+        const { data, error } = await supabase
+          .from('categoriesIncomes')
+          .select('*')
+          .eq('user_id', userId) // Filtra as receitas pelo user_id
+  
+        if (error) {
+          console.error('Erro ao buscar categorias:', error);
+        } else {
+          setCategories(data); // Atualiza a lista de receitas
+        }
+      } catch (error) {
+        console.error('Erro ao carregar categorias:', error);
+      } finally {
+        setLoading(false); // Para de mostrar a tela de carregamento
+      }
+    };
+  
+    fetchCategories();
+  }, []);
+
   const transactions = [
     { id: '1', category: 'Salario', amount: 1500, date: '15 Mar 2019, 8:20 PM' },
     { id: '2', category: 'Freelance', amount: 800, date: '15 Mar 2019, 12:10 AM' },
@@ -177,37 +213,41 @@ const IncomeStatementScreen = ({ navigation }) => {
       <Text style={styles.subtitle}>Acompanhe suas receitas</Text>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
-        {transactions.map((transaction) => (
-          <TouchableOpacity
-            key={transaction.id}
-            onPress={() => navigation.navigate('AddIncomeScreen', { income: transaction, isEditing: true })}
-          >
-            <View style={styles.transactionCard}>
-              <LinearGradient
-                colors={getGradientColors(transaction.category)}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.transactionBackground}
-              >
-                <TouchableOpacity onPress={() => navigation.navigate('CategoryMaintenance', { category: transaction })} style={styles.editCategoryButton}>
-                  <Icon name="edit" size={24} color="#FFFFFF" />
-                </TouchableOpacity>
-                <View style={styles.cardIconContainer}>
-                  <Icon 
-                    name={getCategoryIcon(transaction.category)} 
-                    size={30} 
-                    color="#FFFFFF" 
-                  />
-                </View>
-                <Text style={styles.transactionCategory}>{transaction.category}</Text>
-                <Text style={styles.transactionAmount}>
-                  R${Math.abs(transaction.amount).toFixed(2)}
-                </Text>
-              </LinearGradient>
-            </View>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+  {categories.map((item, index) => (
+    <View 
+      key={item.id} 
+      style={[
+        styles.transactionCard,
+        index === categories.length - 1 && { marginRight: 45 } // Adiciona margem ao último item
+      ]}
+    >
+      <LinearGradient
+        colors={getGradientColors(item.color)} // Use o nome da categoria para o gradiente
+        style={styles.transactionBackground}
+      >
+        <TouchableOpacity 
+          onPress={() => navigation.navigate('CategoryMaintenance', { category: item, isAdding: false, categoryType: 'incomes' })} 
+          style={styles.editCategoryButton}
+        >
+          <Icon name="edit" size={24} color="#FFFFFF" />
+        </TouchableOpacity>
+        <View style={styles.cardIconContainer}>
+          <Icon 
+            name={getCategoryIcon(item.name)} // Use o nome da categoria para obter o ícone
+            size={30} 
+            color="#FFFFFF" 
+          />
+        </View>
+        <Text style={styles.transactionCategory}>{item.name}</Text>
+        <Text style={styles.transactionAmount}>
+          {item.budget 
+            ? `R$00` 
+            : 'Sem orçamento'}
+        </Text>
+      </LinearGradient>
+    </View>
+  ))}
+</ScrollView>
 
       <View style={[
         styles.fixedModalContainer,
@@ -259,11 +299,20 @@ const IncomeStatementScreen = ({ navigation }) => {
                   keyExtractor={item => item.id}
                   renderItem={({ item }) => (
                     <TouchableOpacity
-                      onPress={() => navigation.navigate('AddIncomeScreen', { income: item, name: item.name, isEditing: true, title: 'Manutenção de Receita' })}
+                      onPress={() => navigation.navigate('AddIncomeScreen', { income: item, name: item.name, isEditing: true, title: 'Manutenção de Receita', incomeId: item.id, tela: incomes })}
                     >
                       <View style={styles.incomeItem}>
                         <View style={styles.incomeIconContainer}>
-                          
+                        <LinearGradient
+                          colors={getGradientColorsCat(item.name)}
+                          style={styles.expenseIcon}
+                        >
+                          <Icon 
+                            name={getCategoryIcon(item.name)} 
+                            size={36} 
+                            color="#FFFFFF" 
+                          />
+                        </LinearGradient>
                         </View>
                         <View style={styles.incomeDetails}>
                           <Text style={styles.incomeCategory}>{item.name}</Text>
@@ -292,7 +341,16 @@ const IncomeStatementScreen = ({ navigation }) => {
                   renderItem={({ item }) => (
                     <View style={styles.incomeItem}>
                       <View style={styles.incomeIconContainer}>
-                       
+                      <LinearGradient
+                          colors={getGradientColorsCat(item.name)}
+                          style={styles.expenseIcon}
+                        >
+                          <Icon 
+                            name={getCategoryIcon(item.name)} 
+                            size={36} 
+                            color="#FFFFFF" 
+                          />
+                        </LinearGradient>
                       </View>
                       <View style={styles.incomeDetails}>
                         <Text style={styles.incomeCategory}>{item.name}</Text>
@@ -346,18 +404,55 @@ const IncomeStatementScreen = ({ navigation }) => {
 
 const getGradientColors = (category) => {
   switch (category.toLowerCase()) {
-    case 'Salario':
-      return ['#FFCF87', '#CA9547'];
-    case 'Freelance':
-      return ['#E09FFF', '#8034A5'];
-    case 'investimento':
-      return ['#87F0FF', '#409AA7'];
-    case 'presente':
-      return ['#FF8787', '#C16A6A'];
-    case 'outros':
-      return ['#FFCF87', '#CA9547'];
+    case 'amarelo':
+      return ['#DAA520', '#DAA520'];
+    case 'azul':
+      return ['#0000CD', '#0000CD'];
+    case 'vermelho':
+      return ['#8B0000', '#8B0000'];
+    case 'rosa':
+      return ['#C71585', '#C71585'];
+    case 'verde':
+      return ['#006400', '#006400'];
+    case 'roxo':
+      return ['#6A5ACD', '#6A5ACD'];
+    case 'laranja':
+      return ['#FF4500', '#FF4500'];
+    case 'marrom':
+      return ['#5D3C29', '#5D3C29'];
+    case 'cinza':
+      return ['#6E6E6E', '#6E6E6E'];
+    case 'preto':
+      return ['#1C1C1C', '#1C1C1C'];
     default:
-      return ['#FFCF87', '#CA9547'];
+      return ['#FFCF87', '#CA9547']; // Cor padrão
+  }
+};
+
+const getGradientColorsCat = (category) => {
+  switch (category.toLowerCase()) {
+    case 'amarelo':
+      return ['#DAA520', '#DAA520'];
+    case 'azul':
+      return ['#0000CD', '#0000CD'];
+    case 'vermelho':
+      return ['#8B0000', '#8B0000'];
+    case 'rosa':
+      return ['#C71585', '#C71585'];
+    case 'verde':
+      return ['#006400', '#006400'];
+    case 'roxo':
+      return ['#6A5ACD', '#6A5ACD'];
+    case 'laranja':
+      return ['#FF4500', '#FF4500'];
+    case 'marrom':
+      return ['#5D3C29', '#5D3C29'];
+    case 'cinza':
+      return ['#6E6E6E', '#6E6E6E'];
+    case 'preto':
+      return ['#1C1C1C', '#1C1C1C'];
+    default:
+      return ['transparent', 'transparent']; // Cor padrão
   }
 };
 

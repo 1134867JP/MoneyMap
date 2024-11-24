@@ -113,6 +113,41 @@ const ExpenseStatementScreen = ({ navigation }) => {
     fetchExpenses();
   }, []);
 
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        // Obter o usuário autenticado
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        
+        if (userError || !user?.id) {
+          console.log('Erro ao obter o usuário');
+          setLoading(false);
+          return;
+        }
+        
+        const userId = user.id;
+  
+        // Buscar as despesas do usuário
+        const { data, error } = await supabase
+          .from('categoriesExpenses')
+          .select('*')
+          .eq('user_id', userId) // Filtra as receitas pelo user_id
+  
+        if (error) {
+          console.error('Erro ao buscar categorias:', error);
+        } else {
+          setCategories(data); // Atualiza a lista de receitas
+        }
+      } catch (error) {
+        console.error('Erro ao carregar categorias:', error);
+      } finally {
+        setLoading(false); // Para de mostrar a tela de carregamento
+      }
+    };
+  
+    fetchCategories();
+  }, []);
+
   const screenHeight = Dimensions.get('window').height;
   const minimizedHeight = 200; 
   const maximizedHeight = screenHeight * 0.7;
@@ -141,29 +176,6 @@ const ExpenseStatementScreen = ({ navigation }) => {
     }
   };
 
-  const handleAddCategory = () => {
-    if (categoryName.trim() === '') {
-      setAlertMessage('O nome da categoria não pode estar vazio.');
-      setAlertVisible(true);
-      return;
-    }
-  
-    const newCategory = { name: categoryName, color: selectedColor };
-  
-    if (editingIndex !== null) {
-      const updatedCategories = [...categories];
-      updatedCategories[editingIndex] = newCategory;
-      setCategories(updatedCategories);
-      setEditingIndex(null);
-    } else {
-      setCategories([...categories, newCategory]);
-    }
-  
-    setCategoryName('');
-    setAlertMessage('Categoria adicionada com sucesso!');
-    setAlertVisible(true);
-  };
-
   return (
     <View style={styles.container}>
       <LinearGradient
@@ -184,33 +196,41 @@ const ExpenseStatementScreen = ({ navigation }) => {
       <Text style={styles.subtitle}>Acompanhe suas despesas</Text>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
-        {transactions.map((transaction, index) => (
-          <View key={transaction.id} style={[
-            styles.transactionCard,
-            index === transactions.length - 1 && { marginRight: 45 } // Add margin to the last item
-          ]}>
-            <LinearGradient
-              colors={getGradientColors(transaction.category)}
-              style={styles.transactionBackground}
-            >
-              <TouchableOpacity onPress={() => navigation.navigate('CategoryMaintenance', { category: transaction })} style={styles.editCategoryButton}>
-                <Icon name="edit" size={24} color="#FFFFFF" />
-              </TouchableOpacity>
-              <View style={styles.cardIconContainer}>
-                <Icon 
-                  name={getCategoryIcon(transaction.category)} 
-                  size={30} // Adjusted icon size
-                  color="#FFFFFF" 
-                />
-              </View>
-              <Text style={styles.transactionCategory}>{transaction.category}</Text>
-              <Text style={styles.transactionAmount}>
-                R${Math.abs(transaction.amount).toFixed(2)}
-              </Text>
-            </LinearGradient>
-          </View>
-        ))}
-      </ScrollView>
+  {categories.map((item, index) => (
+    <View 
+      key={item.id} 
+      style={[
+        styles.transactionCard,
+        index === categories.length - 1 && { marginRight: 45 } // Adiciona margem ao último item
+      ]}
+    >
+      <LinearGradient
+        colors={getGradientColors(item.color)} // Use o nome da categoria para o gradiente
+        style={styles.transactionBackground}
+      >
+        <TouchableOpacity 
+          onPress={() => navigation.navigate('CategoryMaintenance', { category: item, isAdding: false, categoryType: 'expenses' })} 
+          style={styles.editCategoryButton}
+        >
+          <Icon name="edit" size={24} color="#FFFFFF" />
+        </TouchableOpacity>
+        <View style={styles.cardIconContainer}>
+          <Icon 
+            name={getCategoryIcon(item.name)} // Use o nome da categoria para obter o ícone
+            size={30} 
+            color="#FFFFFF" 
+          />
+        </View>
+        <Text style={styles.transactionCategory}>{item.name}</Text>
+        <Text style={styles.transactionAmount}>
+          {item.budget 
+            ? `R$00` 
+            : 'Sem orçamento'}
+        </Text>
+      </LinearGradient>
+    </View>
+  ))}
+</ScrollView>
 
       <View style={[
         styles.fixedModalContainer,
@@ -262,11 +282,20 @@ const ExpenseStatementScreen = ({ navigation }) => {
                   keyExtractor={item => item.id}
                   renderItem={({ item }) => (
                     <TouchableOpacity
-                      onPress={() => navigation.navigate('AddExpenseScreen', { expense: item, isEditing: true, fromExpenseStatement: true })}
+                      onPress={() => navigation.navigate('AddExpenseScreen', { expense: item, isEditing: true, fromExpenseStatement: true, expenseId: item.id, tela: 'expenses' })}
                     >
                       <View style={styles.expenseItem}>
                         <View style={styles.expenseIconContainer}>
-                          
+                        <LinearGradient
+                          colors={getGradientColorsCat(item.name)}
+                          style={styles.expenseIcon}
+                        >
+                          <Icon 
+                            name={getCategoryIcon(item.name)} 
+                            size={36} 
+                            color="#FFFFFF" 
+                          />
+                        </LinearGradient>
                         </View>
                         <View style={styles.expenseDetails}>
                           <Text style={styles.expenseCategory}>{item.name}</Text>
@@ -295,7 +324,16 @@ const ExpenseStatementScreen = ({ navigation }) => {
                   renderItem={({ item }) => (
                     <View style={styles.expenseItem}>
                       <View style={styles.expenseIconContainer}>
-                        
+                      <LinearGradient
+                          colors={getGradientColorsCat(item.name)}
+                          style={styles.expenseIcon}
+                        >
+                          <Icon 
+                            name={getCategoryIcon(item.name)} 
+                            size={36} 
+                            color="#FFFFFF" 
+                          />
+                        </LinearGradient>
                       </View>
                       <View style={styles.expenseDetails}>
                         <Text style={styles.expenseCategory}>{item.name}</Text>
@@ -350,16 +388,55 @@ const ExpenseStatementScreen = ({ navigation }) => {
 
 const getGradientColors = (category) => {
   switch (category.toLowerCase()) {
-    case 'shopping':
-      return ['#FFCF87', '#CA9547'];
-    case 'medicine':
-      return ['#E09FFF', '#8034A5'];
-    case 'sport':
-      return ['#87F0FF', '#409AA7'];
-    case 'travel':
-      return ['#FF8787', '#C16A6A'];
+    case 'amarelo':
+      return ['#DAA520', '#DAA520'];
+    case 'azul':
+      return ['#0000CD', '#0000CD'];
+    case 'vermelho':
+      return ['#8B0000', '#8B0000'];
+    case 'rosa':
+      return ['#C71585', '#C71585'];
+    case 'verde':
+      return ['#006400', '#006400'];
+    case 'roxo':
+      return ['#6A5ACD', '#6A5ACD'];
+    case 'laranja':
+      return ['#FF4500', '#FF4500'];
+    case 'marrom':
+      return ['#5D3C29', '#5D3C29'];
+    case 'cinza':
+      return ['#6E6E6E', '#6E6E6E'];
+    case 'preto':
+      return ['#1C1C1C', '#1C1C1C'];
     default:
-      return ['#FFCF87', '#CA9547'];
+      return ['#FFCF87', '#CA9547']; // Cor padrão
+  }
+};
+
+const getGradientColorsCat = (category) => {
+  switch (category.toLowerCase()) {
+    case 'amarelo':
+      return ['#DAA520', '#DAA520'];
+    case 'azul':
+      return ['#0000CD', '#0000CD'];
+    case 'vermelho':
+      return ['#8B0000', '#8B0000'];
+    case 'rosa':
+      return ['#C71585', '#C71585'];
+    case 'verde':
+      return ['#006400', '#006400'];
+    case 'roxo':
+      return ['#6A5ACD', '#6A5ACD'];
+    case 'laranja':
+      return ['#FF4500', '#FF4500'];
+    case 'marrom':
+      return ['#5D3C29', '#5D3C29'];
+    case 'cinza':
+      return ['#6E6E6E', '#6E6E6E'];
+    case 'preto':
+      return ['#1C1C1C', '#1C1C1C'];
+    default:
+      return ['transparent', 'transparent']; // Cor padrão
   }
 };
 
@@ -554,21 +631,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderBottomWidth: 1,
     borderBottomColor: '#E5E5E5',
-  },
-  expenseIconContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 10,
-  },
-  expenseIcon: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 10,
   },
   expenseDetails: {
     flex: 1,

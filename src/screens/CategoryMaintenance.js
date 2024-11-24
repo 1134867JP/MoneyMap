@@ -10,11 +10,11 @@ import CustomAlert from '../components/CustomAlert'; // Add CustomAlert import
 import { supabase } from '../services/supabaseClient';
 
 const CategoryMaintenance = ({ navigation, route }) => {
+  const { category, isAdding, categoryType } = route.params || {}
   const [categories, setCategories] = useState([]);
-  const [categoryName, setCategoryName] = useState('');
-  const [selectedColor, setSelectedColor] = useState('Amarelo'); // Cor padrão
+  const [categoryName, setCategoryName] = useState(category ? category.name : '');
+  const [selectedColor, setSelectedColor] = useState(category ? category.color : 'Amarelo'); // Cor padrão
   const [editingIndex, setEditingIndex] = useState(null);
-  const [isAdding, setIsAdding] = useState(false);
   const [alertVisible, setAlertVisible] = useState(false); // Add state for alert visibility
   const [alertMessage, setAlertMessage] = useState(''); // Add state for alert message
 
@@ -34,8 +34,6 @@ const CategoryMaintenance = ({ navigation, route }) => {
       setAlertVisible(true);
       return;
     }
-
-    const { categoryType } = route.params;
   
     const userId = user.id;
   
@@ -78,63 +76,36 @@ const CategoryMaintenance = ({ navigation, route }) => {
     }
   };
 
-  useEffect(() => {
-    if (route.params?.category) {
-      const { category, color } = route.params.category;
-      setCategoryName(category);
-      setSelectedColor(color);
-      setEditingIndex(null);
-      setIsAdding(false);
-    } else if (route.params?.isAdding) {
-      setIsAdding(true);
-    }
-  }, [route.params]);
+  const deleteCategory = async () => {
+    try {
+      const { categoryType } = route.params;
 
-  const handleAddCategory = () => {
-    if (categoryName.trim() === '') {
-      setAlertMessage('O nome da categoria não pode estar vazio.');
+      let tableName = '';
+  
+      // Verifique de qual tela a função foi chamada
+      if (categoryType === 'expenses') {
+        tableName = 'categoriesExpenses'; // Tabela de despesas
+      } else if (categoryType === 'incomes') {
+        tableName = 'categoriesIncomes'; // Tabela de receitas
+      }
+
+      const { data, error } = await supabase
+        .from(tableName)
+        .delete()
+        .eq('id', category.id);
+  
+      if (error) {
+        throw error;
+      }
+  
+      console.log('Categoria excluída com sucesso:', data);
+      setAlertMessage('Categoria excluída com sucesso!');
       setAlertVisible(true);
-      return;
+      navigation.goBack();
+    
+    } catch (error) {
+      console.error('Erro ao excluir a Categoria:', error.message);
     }
-
-    const newCategory = { name: categoryName, color: selectedColor };
-
-    if (editingIndex !== null) {
-      const updatedCategories = [...categories];
-      updatedCategories[editingIndex] = newCategory;
-      setCategories(updatedCategories);
-      setEditingIndex(null);
-    } else {
-      setCategories([...categories, newCategory]);
-    }
-
-    setCategoryName('');
-    setAlertMessage('Categoria adicionada com sucesso!');
-    setAlertVisible(true);
-  };
-
-  const handleEditCategory = (index) => {
-    setCategoryName(categories[index].name);
-    setSelectedColor(categories[index].color);
-    setEditingIndex(index);
-  };
-
-  const handleDeleteCategory = (index) => {
-    Alert.alert(
-      'Confirmar Exclusão',
-      'Você tem certeza que deseja excluir esta categoria?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Excluir',
-          style: 'destructive',
-          onPress: () => {
-            const updatedCategories = categories.filter((_, i) => i !== index);
-            setCategories(updatedCategories);
-          },
-        },
-      ]
-    );
   };
 
   return (
@@ -190,6 +161,14 @@ const CategoryMaintenance = ({ navigation, route }) => {
               gradientColors={["#4960F9", "#4033FF"]}
               textStyle={styles.buttonText}
             />
+          )}
+          {!isAdding &&  (
+            <TouchableOpacity
+              style={styles.deleteButton}
+              onPress={deleteCategory}
+            >
+              <Text style={styles.deleteButtonText}>Excluir</Text>
+            </TouchableOpacity>
           )}
           {!isAdding && (
             <CustomButton
@@ -291,9 +270,23 @@ const styles = StyleSheet.create({
     bottom: hp(5),
     left: 0,
     right: 0,
-    flexDirection: 'row', // Align buttons in a row
+    flexDirection: 'column', // Align buttons in a row
     justifyContent: 'space-around', // Space between buttons
     alignItems: 'center',
+  },
+  deleteButton: {
+    backgroundColor: '#FF0000',
+    padding: 15,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginTop: 30,
+    borderRadius: 40,
+    paddingHorizontal: 150,
+  },
+  deleteButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
   },
   addButton: {
     flex: 1,

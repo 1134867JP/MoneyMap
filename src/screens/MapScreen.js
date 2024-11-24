@@ -6,6 +6,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import { FontAwesome } from '@expo/vector-icons';
 import BackButton from '../components/BackButton'
 import { API_KEY } from '../config'; // Import the API key from the config file
+import { supabase } from '../services/supabaseClient';
 
 const { width, height } = Dimensions.get('window');
 
@@ -13,14 +14,15 @@ Geocoder.init(API_KEY);
 
 const MapScreen = () => {
   const [region, setRegion] = useState({
-    latitude: -23.55052,
-    longitude: -46.633308,
+    latitude: -28.26547829254501,
+    longitude:  -52.39746434586223,
     latitudeDelta: 0.0922,
     longitudeDelta: 0.0421,
   });
   const [marker, setMarker] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
+  const [locations, setLocations] = useState([]);
   const [expenses, setExpenses] = useState([
     { id: 1, name: 'Despesa 1', rating: 4, latitude: -23.55052, longitude: -46.633308 },
     { id: 2, name: 'Despesa 2', rating: 5, latitude: -23.55152, longitude: -46.634308 },
@@ -29,6 +31,26 @@ const MapScreen = () => {
     { id: 5, name: 'Despesa 5', rating: 1, latitude: -23.55452, longitude: -46.637308 },
   ]);
   const mapRef = useRef(null);
+
+  useEffect(() => {
+    const fetchLocations = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('locations') // Your Supabase table name
+          .select('id, name, latitude, longitude, rating'); // Fields you need to fetch
+
+        if (error) {
+          console.error('Error fetching locations:', error);
+        } else {
+          setLocations(data);
+        }
+      } catch (error) {
+        console.error('Error fetching locarions:', error);
+      }
+    };
+
+    fetchLocations();
+  }, []);
 
   const fetchSuggestions = async (query) => {
     try {
@@ -110,7 +132,7 @@ const MapScreen = () => {
         region={region}
         onPress={handleMapPress}
       >
-        {expenses.map(expense => (
+        {locations.map(expense => (
           <Marker
             key={expense.id}
             coordinate={{ latitude: expense.latitude, longitude: expense.longitude }}

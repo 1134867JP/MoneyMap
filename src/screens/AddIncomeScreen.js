@@ -19,7 +19,7 @@ import { wp, hp, scale, verticalScale, moderateScale } from '../utils/dimensions
 import { supabase } from '../services/supabaseClient';
 
 const AddIncomeScreen = ({ navigation, route }) => {
-  const { income, isEditing, title } = route.params || {};
+  const { income, isEditing, title, incomeId, tela } = route.params || {};
   const [name, setName] = useState(income ? income.name : '');
   const [category, setCategory] = useState(income ? income.category_id : '');
   const [amount, setAmount] = useState(income ? `R$${Math.abs(income.amount).toFixed(2)}` : 'R$0,00');
@@ -90,6 +90,65 @@ const AddIncomeScreen = ({ navigation, route }) => {
       } else {
         console.log('Receita salva com sucesso:', data);
         setAlertMessage('Receita salva com sucesso!');
+        setAlertVisible(true);
+  
+        // Redirecionar ou limpar formulário
+        navigation.goBack();
+      }
+    } catch (error) {
+      console.error('Erro inesperado:', error);
+      setAlertMessage('Ocorreu um erro inesperado. Por favor, tente novamente.');
+      setAlertVisible(true);
+    }
+  };
+
+  const editIncome = async () => {
+    // Validar campos obrigatórios
+    if (!name || !category || !amount || !incomeDate) {
+      setAlertMessage('Todos os campos são obrigatórios.');
+      setAlertVisible(true);
+      return;
+    }
+  
+    // Obter o usuário autenticado
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user?.id) {
+      setAlertMessage('Erro: usuário não autenticado.');
+      setAlertVisible(true);
+      return;
+    }
+
+    if (!incomeId) {
+      setAlertMessage('Erro: ID da despesa não encontrado.');
+      setAlertVisible(true);
+      return;
+    }
+  
+    const userId = user.id;
+  
+    try {
+      // Inserir na tabela `incomes`
+      const { data, error } = await supabase
+      .from('incomes')
+      .update([
+        {
+          category_id: parseInt(category, 10),
+          name: name.trim(),
+          amount: parseFloat(amount.replace('R$', '').replace(',', '.')),
+          income_date: incomeDate.toISOString().split('T')[0],
+          // Não inclua a chave primária (id) aqui, deixe o banco gerar automaticamente
+        },
+      ])
+      .eq('id', incomeId);
+  
+      if (error) {
+        console.error('Erro ao editar receita:', error);
+        setAlertMessage('Erro ao editar a receita. Por favor, tente novamente.');
+        setAlertVisible(true);
+      } else {
+        console.log('Receita editada com sucesso:', data);
+        setAlertMessage('Receita editada com sucesso!');
         setAlertVisible(true);
   
         // Redirecionar ou limpar formulário
@@ -202,7 +261,7 @@ const AddIncomeScreen = ({ navigation, route }) => {
           )}
           <CustomButton
             label={isEditing ? "Salvar" : "Adicionar"}
-            onPress={saveIncome}
+            onPress={isEditing ? editIncome : saveIncome}
             style={styles.customButton} // Ensure this line is present
             gradientColors={['#FFFFFF', '#FFFFFF']} // Set gradient colors to white
             textColor="#1937FE" // Set text color to black for contrast

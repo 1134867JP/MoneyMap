@@ -22,13 +22,13 @@ import * as Location from 'expo-location';
 import { wp, hp, moderateScale } from '../utils/dimensions';
 import CustomAlert from '../components/CustomAlert'; // Add this import
 import { supabase } from '../services/supabaseClient';
+import { API_KEY } from '../config'; // Import the API key from the config file
 
 const { width } = Dimensions.get('window');
 
 const AddExpenseScreen = ({ navigation }) => {
   const route = useRoute();
-  const { expense } = route.params || {};
-  const { recarregarExpenses } = route.params || {};
+  const { expense, expenseId, tela } = route.params || {};
   const [name, setName] = useState(expense ? expense.name : '');
   const [category, setCategory] = useState(expense ? expense.category_id : '');
   const [amount, setAmount] = useState(expense ? `R$${Math.abs(expense.amount).toFixed(2)}` : 'R$0,00');
@@ -46,6 +46,29 @@ const AddExpenseScreen = ({ navigation }) => {
   const nav = useNavigation();
   const isEditing = route.params?.isEditing || false;
   const fromExpenseStatement = route.params?.fromExpenseStatement || false;
+  const [latitude, setLatitude] = useState(null);
+  const [longitude, setLongitude] = useState(null);
+
+  const getCoordinatesFromAddress = async (address) => {
+    const apiKey = API_KEY; // Substitua com sua chave de API
+    try {
+      const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${address}&key=${apiKey}`;
+      const response = await fetch(url);
+      const data = await response.json();
+  
+      if (data.status === 'OK') {
+        const { lat, lng } = data.results[0].geometry.location;
+        console.log(`Latitude: ${lat}, Longitude: ${lng}`);
+        return { latitude: lat, longitude: lng }; // Retorna as coordenadas
+      } else {
+        console.error('Erro ao encontrar o endereço:', data.status);
+        return null; // Retorna null em caso de erro
+      }
+    } catch (err) {
+      console.error('Erro ao buscar coordenadas:', err);
+      return null; // Retorna null em caso de erro
+    }
+  };
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -85,8 +108,19 @@ const AddExpenseScreen = ({ navigation }) => {
     }
   
     const userId = user.id;
-  
+
     try {
+      // Obter coordenadas antes de inserir a despesa
+      const coordinates = await getCoordinatesFromAddress(location); // Espera a função retornar as coordenadas
+      if (!coordinates) {
+        setAlertMessage('Erro ao obter coordenadas.');
+        setAlertVisible(true);
+        return;
+      }
+  
+      const { latitude, longitude } = coordinates;
+  
+    
       // Inserir na tabela `expenses`
       const { data, error } = await supabase.from('expenses').insert([
         {
@@ -99,7 +133,22 @@ const AddExpenseScreen = ({ navigation }) => {
           rating: rating,
           // Não inclua a chave primária (id) aqui, deixe o banco gerar automaticamente
         },
+        
+        
       ]);
+
+      await supabase.from('locations').insert([
+        {
+          address: location,
+          rating: rating,
+          name: name.trim(),
+          latitude: latitude,
+          longitude: longitude,
+        },
+        
+        
+      ]);
+      
   
       if (error) {
         console.error('Erro ao salvar despesa:', error);
@@ -138,6 +187,64 @@ const AddExpenseScreen = ({ navigation }) => {
     
     } catch (error) {
       console.error('Erro ao excluir a despesa:', error.message);
+    }
+  };
+
+  const editExpense = async () => {
+    // Validar campos obrigatórios
+    if (!name || !category || !amount || !expenseDate) {
+      setAlertMessage('Por favor, preencha todos os campos obrigatórios.');
+      setAlertVisible(true);
+      return;
+    }
+  
+    // Obter o usuário autenticado
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user?.id) {
+      setAlertMessage('Erro: usuário não autenticado.');
+      setAlertVisible(true);
+      return;
+    }
+  
+    if (!expenseId) {
+      setAlertMessage('Erro: ID da despesa não encontrado.');
+      setAlertVisible(true);
+      return;
+    }
+  
+    const userId = user.id;
+  
+    try {
+      // Atualizar a tabela `expenses`
+      const { data, error } = await supabase
+        .from('expenses')
+        .update({
+          category_id: parseInt(category, 10),
+          name: name.trim(),
+          amount: parseFloat(amount.replace('R$', '').replace(',', '.')),
+          expense_date: expenseDate.toISOString().split('T')[0],
+          validity_date: validityDate ? validityDate.toISOString().split('T')[0] : null,
+          rating: rating,
+        })
+        .eq('id', expenseId); // Atualiza a despesa com o ID correspondente
+  
+      if (error) {
+        console.error('Erro ao editar despesa:', error);
+        setAlertMessage('Erro ao editar a despesa. Por favor, tente novamente.');
+        setAlertVisible(true);
+      } else {
+        console.log('Despesa editada com sucesso:', data);
+        setAlertMessage('Despesa editada com sucesso!');
+        setAlertVisible(true);
+  
+        // Redirecionar ou limpar formulário
+        navigation.goBack();
+      }
+    } catch (error) {
+      console.error('Erro inesperado:', error);
+      setAlertMessage('Ocorreu um erro inesperado. Por favor, tente novamente.');
+      setAlertVisible(true);
     }
   };
 
@@ -318,7 +425,7 @@ const AddExpenseScreen = ({ navigation }) => {
           )}
           <CustomButton
             label={isEditing && fromExpenseStatement ? "Salvar" : "Adicionar"}
-            onPress={saveExpense}
+            onPress={isEditing && fromExpenseStatement ? editExpense : saveExpense}
             gradientColors={['#FFFFFF', '#FFFFFF']}
             textColor="#1937FE"
             iconColor="#1937FE" 
