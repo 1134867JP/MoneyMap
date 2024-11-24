@@ -23,13 +23,6 @@ const MapScreen = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [locations, setLocations] = useState([]);
-  const [expenses, setExpenses] = useState([
-    { id: 1, name: 'Despesa 1', rating: 4, latitude: -23.55052, longitude: -46.633308 },
-    { id: 2, name: 'Despesa 2', rating: 5, latitude: -23.55152, longitude: -46.634308 },
-    { id: 3, name: 'Despesa 3', rating: 3, latitude: -23.55252, longitude: -46.635308 },
-    { id: 4, name: 'Despesa 4', rating: 2, latitude: -23.55352, longitude: -46.636308 },
-    { id: 5, name: 'Despesa 5', rating: 1, latitude: -23.55452, longitude: -46.637308 },
-  ]);
   const mapRef = useRef(null);
 
   useEffect(() => {

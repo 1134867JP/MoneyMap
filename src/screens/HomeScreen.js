@@ -15,6 +15,8 @@ import { supabase } from "../services/supabaseClient";
 import { userAuth } from '../contexts/userContext';
 import { Ionicons } from '@expo/vector-icons'; // Add this import
 import { wp, hp, moderateScale } from '../utils/dimensions';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback } from 'react';
 
 const { width } = Dimensions.get("window");
 
@@ -37,6 +39,106 @@ const HomeScreen = ({ navigation }) => {
     ],
   });
   const [monthlyData, setMonthlyData] = useState([]);
+  const [totalAmount, setTotalAmount] = useState(0);
+  const [totalIncomes, setTotalIncomes] = useState(0);
+  const [totalExpenses, setTotalExpenses] = useState(0);
+
+  const fetchTotalExpenses = async () => {
+    try {
+      // Obter o usuário autenticado
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user?.id) {
+        console.log('Erro ao obter o usuário');
+        setLoading(false);
+        return;
+      }
+      
+      const userId = user.id;
+
+      // Buscar as despesas do usuário
+      const { data, error } = await supabase
+        .from('expenses')
+        .select('amount')
+        .eq('user_id', userId); // Filtro pelo user_id
+      
+      if (error) {
+        console.error('Erro ao buscar as despesas:', error);
+        setLoading(false);
+        return;
+      }
+
+      // Somar os valores de "amount"
+      const total = data.reduce((sum, expense) => sum + expense.amount, 0);
+      
+      // Atualizar o estado com o total
+      setTotalExpenses(total);
+    } catch (error) {
+      console.error('Erro ao calcular o total:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchTotalIncomes = async () => {
+    try {
+      // Obter o usuário autenticado
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user?.id) {
+        console.log('Erro ao obter o usuário');
+        setLoading(false);
+        return;
+      }
+      
+      const userId = user.id;
+
+      // Buscar as despesas do usuário
+      const { data, error } = await supabase
+        .from('incomes')
+        .select('amount')
+        .eq('user_id', userId); // Filtro pelo user_id
+      
+      if (error) {
+        console.error('Erro ao buscar as receitas:', error);
+        setLoading(false);
+        return;
+      }
+
+      // Somar os valores de "amount"
+      const total = data.reduce((sum, expense) => sum + expense.amount, 0);
+      
+      // Atualizar o estado com o total
+      setTotalIncomes(total);
+    } catch (error) {
+      console.error('Erro ao calcular o total:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTotalExpenses();
+    fetchTotalIncomes();
+    setTotalAmount(totalIncomes - totalExpenses);
+    console.log(totalAmount);
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      // Chama as funções quando a tela ganha foco
+      fetchTotalExpenses();
+      fetchTotalIncomes();
+      const total = totalIncomes - totalExpenses;
+      setTotalAmount(total);
+      console.log('Total atualizado:', total);
+  
+      // Função de limpeza opcional (se necessário)
+      return () => {
+        console.log('Tela perdeu o foco');
+      };
+    }, [totalIncomes, totalExpenses]) // Dependências que podem mudar
+  );
 
   useEffect(() => {
     if (userProfile) {
@@ -160,7 +262,7 @@ const HomeScreen = ({ navigation }) => {
       <Text style={styles.greeting}>Bom dia, {fullName}</Text>
       <View style={styles.balanceCard}>
         <Text style={styles.balanceTitle}>Suas Finanças</Text>
-        <Text style={styles.balanceAmount}>{`R$ ${balance.toFixed(2)}`}</Text>
+        <Text style={[styles.balanceAmount, { color: totalAmount < 0 ? 'red' : '#2D99FF' }]}>{`R$ ${totalAmount.toFixed(2)}`}</Text>
         <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
           <View style={styles.columns}>
             {monthlyData.map((item, index) => {

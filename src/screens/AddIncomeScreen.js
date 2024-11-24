@@ -19,7 +19,7 @@ import { wp, hp, scale, verticalScale, moderateScale } from '../utils/dimensions
 import { supabase } from '../services/supabaseClient';
 
 const AddIncomeScreen = ({ navigation, route }) => {
-  const { income, isEditing, title, incomeId, tela } = route.params || {};
+  const { income, isEditing, title, incomeId, tela, onAddIncome } = route.params || {};
   const [name, setName] = useState(income ? income.name : '');
   const [category, setCategory] = useState(income ? income.category_id : '');
   const [amount, setAmount] = useState(income ? `R$${Math.abs(income.amount).toFixed(2)}` : 'R$0,00');
@@ -33,9 +33,20 @@ const AddIncomeScreen = ({ navigation, route }) => {
 
   const fetchCategories = async () => {
     try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+        
+      if (userError || !user?.id) {
+        console.log('Erro ao obter o usuário');
+        setLoading(false);
+        return;
+      }
+      
+      const userId = user.id;
+
       const { data, error } = await supabase
         .from('categoriesIncomes') // Your Supabase table name
-        .select('id, name'); // Fields you need to fetch
+        .select('id, name')
+        .eq('user_id', userId); // Fields you need to fetch
 
       if (error) {
         console.error('Error fetching categories:', error);
@@ -161,7 +172,9 @@ const AddIncomeScreen = ({ navigation, route }) => {
         setAlertMessage('Receita editada com sucesso!');
         setAlertVisible(true);
   
-        // Redirecionar ou limpar formulário
+        if (onAddIncome) {
+          onAddIncome();
+        }
         navigation.goBack();
       }
     } catch (error) {
@@ -185,6 +198,9 @@ const AddIncomeScreen = ({ navigation, route }) => {
       console.log('Receita excluída com sucesso:', data);
       setAlertMessage('Receita excluída com sucesso!');
       setAlertVisible(true);
+      if (onAddIncome) {
+        onAddIncome();
+      }
       navigation.goBack();
     
     } catch (error) {

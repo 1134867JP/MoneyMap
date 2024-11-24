@@ -38,115 +38,117 @@ const IncomeStatementScreen = ({ navigation }) => {
   const minimizedHeight = 200;
   const maximizedHeight = screenHeight * 0.7; // Increased height
 
-  useEffect(() => {
-    const fetchTotalAmount = async () => {
-      try {
-        // Obter o usuário autenticado
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
-        
-        if (userError || !user?.id) {
-          console.log('Erro ao obter o usuário');
-          setLoading(false);
-          return;
-        }
-        
-        const userId = user.id;
-
-        // Buscar as despesas do usuário
-        const { data, error } = await supabase
-          .from('incomes')
-          .select('amount')
-          .eq('user_id', userId); // Filtro pelo user_id
-        
-        if (error) {
-          console.error('Erro ao buscar as receitas:', error);
-          setLoading(false);
-          return;
-        }
-
-        // Somar os valores de "amount"
-        const total = data.reduce((sum, expense) => sum + expense.amount, 0);
-        
-        // Atualizar o estado com o total
-        setTotalAmount(total);
-      } catch (error) {
-        console.error('Erro ao calcular o total:', error);
-      } finally {
+  const fetchTotalAmount = async () => {
+    try {
+      // Obter o usuário autenticado
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user?.id) {
+        console.log('Erro ao obter o usuário');
         setLoading(false);
+        return;
       }
-    };
+      
+      const userId = user.id;
 
+      // Buscar as despesas do usuário
+      const { data, error } = await supabase
+        .from('incomes')
+        .select('amount')
+        .eq('user_id', userId); // Filtro pelo user_id
+      
+      if (error) {
+        console.error('Erro ao buscar as receitas:', error);
+        setLoading(false);
+        return;
+      }
+
+      // Somar os valores de "amount"
+      const total = data.reduce((sum, expense) => sum + expense.amount, 0);
+      
+      // Atualizar o estado com o total
+      setTotalAmount(total);
+    } catch (error) {
+      console.error('Erro ao calcular o total:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+  useEffect(() => {
     fetchTotalAmount();
   }, []);
 
-  useEffect(() => {
-    const fetchIncomes = async () => {
-      try {
-        // Obter o usuário autenticado
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
-        
-        if (userError || !user?.id) {
-          console.log('Erro ao obter o usuário');
-          setLoading(false);
-          return;
-        }
-        
-        const userId = user.id;
-  
-        // Buscar as receitas do usuário
-        const { data, error } = await supabase
-          .from('incomes')
-          .select('*')
-          .eq('user_id', userId) // Filtra as receitas pelo user_id
-          .order('income_date', { ascending: false }); // Ordena por data (mais recentes primeiro)
-  
-        if (error) {
-          console.error('Erro ao buscar receitas:', error);
-        } else {
-          setIncomes(data); // Atualiza a lista de receitas
-        }
-      } catch (error) {
-        console.error('Erro ao carregar receitas:', error);
-      } finally {
-        setLoading(false); // Para de mostrar a tela de carregamento
+  const fetchIncomes = async () => {
+    try {
+      // Obter o usuário autenticado
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user?.id) {
+        console.log('Erro ao obter o usuário');
+        setLoading(false);
+        return;
       }
-    };
-  
+      
+      const userId = user.id;
+
+      // Buscar as receitas do usuário
+      const { data, error } = await supabase
+        .from('incomes')
+        .select('*')
+        .eq('user_id', userId) // Filtra as receitas pelo user_id
+        .order('income_date', { ascending: false }); // Ordena por data (mais recentes primeiro)
+
+      if (error) {
+        console.error('Erro ao buscar receitas:', error);
+      } else {
+        setIncomes(data); // Atualiza a lista de receitas
+      }
+    } catch (error) {
+      console.error('Erro ao carregar receitas:', error);
+    } finally {
+      setLoading(false); // Para de mostrar a tela de carregamento
+    }
+  };
+
+  useEffect(() => {
     fetchIncomes();
   }, []);
 
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        // Obter o usuário autenticado
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
-        
-        if (userError || !user?.id) {
-          console.log('Erro ao obter o usuário');
-          setLoading(false);
-          return;
-        }
-        
-        const userId = user.id;
-  
-        // Buscar as despesas do usuário
-        const { data, error } = await supabase
-          .from('categoriesIncomes')
-          .select('*')
-          .eq('user_id', userId) // Filtra as receitas pelo user_id
-  
-        if (error) {
-          console.error('Erro ao buscar categorias:', error);
-        } else {
-          setCategories(data); // Atualiza a lista de receitas
-        }
-      } catch (error) {
-        console.error('Erro ao carregar categorias:', error);
-      } finally {
-        setLoading(false); // Para de mostrar a tela de carregamento
+  const fetchCategories = async () => {
+    try {
+      // Obter o usuário autenticado
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user?.id) {
+        console.log('Erro ao obter o usuário');
+        setLoading(false);
+        return;
       }
-    };
-  
+      
+      const userId = user.id;
+
+      // Buscar as despesas do usuário
+      const { data, error } = await supabase
+        .from('categoriesIncomes')
+        .select('*')
+        .eq('user_id', userId) // Filtra as receitas pelo user_id
+
+      if (error) {
+        console.error('Erro ao buscar categorias:', error);
+      } else {
+        setCategories(data); // Atualiza a lista de receitas
+      }
+    } catch (error) {
+      console.error('Erro ao carregar categorias:', error);
+    } finally {
+      setLoading(false); // Para de mostrar a tela de carregamento
+    }
+  };
+
+
+  useEffect(() => {
     fetchCategories();
   }, []);
 
@@ -247,7 +249,9 @@ const IncomeStatementScreen = ({ navigation }) => {
         style={styles.transactionBackground}
       >
         <TouchableOpacity 
-          onPress={() => navigation.navigate('CategoryMaintenance', { category: item, isAdding: false, categoryType: 'incomes' })} 
+          onPress={() => navigation.navigate('CategoryMaintenance', { category: item, isAdding: false, categoryType: 'incomes', categoryID: item.id,  onCategoryAdded: () => {
+            fetchCategories() && fetchIncomes(); // Atualiza os dados da lista
+          }  })} 
           style={styles.editCategoryButton}
         >
           <Icon name="edit" size={24} color="#FFFFFF" />
@@ -320,7 +324,9 @@ const IncomeStatementScreen = ({ navigation }) => {
                   keyExtractor={item => item.id}
                   renderItem={({ item }) => (
                     <TouchableOpacity
-                      onPress={() => navigation.navigate('AddIncomeScreen', { income: item, name: item.name, isEditing: true, title: 'Manutenção de Receita', incomeId: item.id, tela: incomes })}
+                      onPress={() => navigation.navigate('AddIncomeScreen', { income: item, name: item.name, isEditing: true, title: 'Manutenção de Receita', incomeId: item.id, tela: incomes, onAddIncome: () => {
+                        fetchTotalAmount() && fetchIncomes(); // Atualiza os dados da lista
+                      } })}
                     >
                       <View style={styles.incomeItem}>
                         <View style={styles.incomeIconContainer}>

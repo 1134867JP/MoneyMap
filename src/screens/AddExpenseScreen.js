@@ -23,12 +23,13 @@ import { wp, hp, moderateScale } from '../utils/dimensions';
 import CustomAlert from '../components/CustomAlert'; // Add this import
 import { supabase } from '../services/supabaseClient';
 import { API_KEY } from '../config'; // Import the API key from the config file
+import { Alert } from 'react-native';
 
 const { width } = Dimensions.get('window');
 
 const AddExpenseScreen = ({ navigation }) => {
   const route = useRoute();
-  const { expense, expenseId, tela } = route.params || {};
+  const { expense, expenseId, tela, onAddExpense } = route.params || {};
   const [name, setName] = useState(expense ? expense.name : '');
   const [category, setCategory] = useState(expense ? expense.category_id : '');
   const [amount, setAmount] = useState(expense ? `R$${Math.abs(expense.amount).toFixed(2)}` : 'R$0,00');
@@ -36,7 +37,7 @@ const AddExpenseScreen = ({ navigation }) => {
   const [validityDate, setValidityDate] = useState(expense ? new Date(expense.validity_date) : new Date('2024-12-20'));
   const [showExpenseDatePicker, setShowExpenseDatePicker] = useState(false);
   const [showValidityDatePicker, setShowValidityDatePicker] = useState(false);
-  const [location, setLocation] = useState('');
+  const [location, setLocation] = useState(expense ? expense.location : '');
   const [useCurrentLocation, setUseCurrentLocation] = useState(false);
   const [rating, setRating] = useState(expense ? expense.rating : 0);
   const [loading, setLoading] = useState(false);
@@ -81,9 +82,21 @@ const AddExpenseScreen = ({ navigation }) => {
 
   const fetchCategories = async () => {
     try {
+
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+        
+      if (userError || !user?.id) {
+        console.log('Erro ao obter o usuário');
+        setLoading(false);
+        return;
+      }
+      
+      const userId = user.id;
+
       const { data, error } = await supabase
         .from('categoriesExpenses')
-        .select('id, name');
+        .select('id, name')
+        .eq('user_id', userId);
       if (error) {
         console.error('Error fetching categories:', error);
       } else {
@@ -144,6 +157,7 @@ const AddExpenseScreen = ({ navigation }) => {
           expense_date: expenseDate.toISOString().split('T')[0],
           validity_date: validityDate ? validityDate.toISOString().split('T')[0] : null,
           rating: rating,
+          location: location,
           // Não inclua a chave primária (id) aqui, deixe o banco gerar automaticamente
         },
         
@@ -194,6 +208,10 @@ const AddExpenseScreen = ({ navigation }) => {
       console.log('Despesa excluída com sucesso:', data);
       setAlertMessage('Despesa excluída com sucesso!');
       setAlertVisible(true);
+      if (onAddExpense) {
+        onAddExpense();
+      }
+
       navigation.goBack();
     
     } catch (error) {
@@ -249,7 +267,10 @@ const AddExpenseScreen = ({ navigation }) => {
         setAlertMessage('Despesa editada com sucesso!');
         setAlertVisible(true);
   
-        // Redirecionar ou limpar formulário
+        if (onAddExpense) {
+          onAddExpense();
+        }
+        
         navigation.goBack();
       }
     } catch (error) {

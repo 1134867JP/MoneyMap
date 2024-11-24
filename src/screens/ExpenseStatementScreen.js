@@ -40,115 +40,117 @@ const ExpenseStatementScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true); // Estado para controlar o carregamento
   const [currentLocation, setCurrentLocation] = useState(null); // Add this state
 
-  useEffect(() => {
-    const fetchTotalAmount = async () => {
-      try {
-        // Obter o usuário autenticado
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
-        
-        if (userError || !user?.id) {
-          console.log('Erro ao obter o usuário');
-          setLoading(false);
-          return;
-        }
-        
-        const userId = user.id;
-
-        // Buscar as despesas do usuário
-        const { data, error } = await supabase
-          .from('expenses')
-          .select('amount')
-          .eq('user_id', userId); // Filtro pelo user_id
-        
-        if (error) {
-          console.error('Erro ao buscar as despesas:', error);
-          setLoading(false);
-          return;
-        }
-
-        // Somar os valores de "amount"
-        const total = data.reduce((sum, expense) => sum + expense.amount, 0);
-        
-        // Atualizar o estado com o total
-        setTotalAmount(total);
-      } catch (error) {
-        console.error('Erro ao calcular o total:', error);
-      } finally {
+  const fetchTotalAmount = async () => {
+    try {
+      // Obter o usuário autenticado
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user?.id) {
+        console.log('Erro ao obter o usuário');
         setLoading(false);
+        return;
       }
-    };
+      
+      const userId = user.id;
 
+      // Buscar as despesas do usuário
+      const { data, error } = await supabase
+        .from('expenses')
+        .select('amount')
+        .eq('user_id', userId); // Filtro pelo user_id
+      
+      if (error) {
+        console.error('Erro ao buscar as despesas:', error);
+        setLoading(false);
+        return;
+      }
+
+      // Somar os valores de "amount"
+      const total = data.reduce((sum, expense) => sum + expense.amount, 0);
+      
+      // Atualizar o estado com o total
+      setTotalAmount(total);
+    } catch (error) {
+      console.error('Erro ao calcular o total:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+  useEffect(() => {
     fetchTotalAmount();
   }, []);
 
-  useEffect(() => {
-    const fetchExpenses = async () => {
-      try {
-        // Obter o usuário autenticado
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
-        
-        if (userError || !user?.id) {
-          console.log('Erro ao obter o usuário');
-          setLoading(false);
-          return;
-        }
-        
-        const userId = user.id;
-  
-        // Buscar as despesas do usuário
-        const { data, error } = await supabase
-          .from('expenses')
-          .select('*')
-          .eq('user_id', userId) // Filtra as receitas pelo user_id
-          .order('expense_date', { ascending: false }); // Ordena por data (mais recentes primeiro)
-  
-        if (error) {
-          console.error('Erro ao buscar despesas:', error);
-        } else {
-          setExpenses(data); // Atualiza a lista de receitas
-        }
-      } catch (error) {
-        console.error('Erro ao carregar despesas:', error);
-      } finally {
-        setLoading(false); // Para de mostrar a tela de carregamento
+  const fetchExpenses = async () => {
+    try {
+      // Obter o usuário autenticado
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user?.id) {
+        console.log('Erro ao obter o usuário');
+        setLoading(false);
+        return;
       }
-    };
-  
+      
+      const userId = user.id;
+
+      // Buscar as despesas do usuário
+      const { data, error } = await supabase
+        .from('expenses')
+        .select('*')
+        .eq('user_id', userId) // Filtra as receitas pelo user_id
+        .order('expense_date', { ascending: false }); // Ordena por data (mais recentes primeiro)
+
+      if (error) {
+        console.error('Erro ao buscar despesas:', error);
+      } else {
+        setExpenses(data); // Atualiza a lista de receitas
+      }
+    } catch (error) {
+      console.error('Erro ao carregar despesas:', error);
+    } finally {
+      setLoading(false); // Para de mostrar a tela de carregamento
+    }
+  };
+
+
+  useEffect(() => { 
     fetchExpenses();
   }, []);
 
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        // Obter o usuário autenticado
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
-        
-        if (userError || !user?.id) {
-          console.log('Erro ao obter o usuário');
-          setLoading(false);
-          return;
-        }
-        
-        const userId = user.id;
-  
-        // Buscar as despesas do usuário
-        const { data, error } = await supabase
-          .from('categoriesExpenses')
-          .select('*')
-          .eq('user_id', userId) // Filtra as receitas pelo user_id
-  
-        if (error) {
-          console.error('Erro ao buscar categorias:', error);
-        } else {
-          setCategories(data); // Atualiza a lista de receitas
-        }
-      } catch (error) {
-        console.error('Erro ao carregar categorias:', error);
-      } finally {
-        setLoading(false); // Para de mostrar a tela de carregamento
+  const fetchCategories = async () => {
+    try {
+      // Obter o usuário autenticado
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user?.id) {
+        console.log('Erro ao obter o usuário');
+        setLoading(false);
+        return;
       }
-    };
-  
+      
+      const userId = user.id;
+
+      // Buscar as despesas do usuário
+      const { data, error } = await supabase
+        .from('categoriesExpenses')
+        .select('*')
+        .eq('user_id', userId) // Filtra as receitas pelo user_id
+
+      if (error) {
+        console.error('Erro ao buscar categorias:', error);
+      } else {
+        setCategories(data); // Atualiza a lista de receitas
+      }
+    } catch (error) {
+      console.error('Erro ao carregar categorias:', error);
+    } finally {
+      setLoading(false); // Para de mostrar a tela de carregamento
+    }
+  };
+
+  useEffect(() => {
     fetchCategories();
   }, []);
 
@@ -292,7 +294,9 @@ const ExpenseStatementScreen = ({ navigation }) => {
         style={styles.transactionBackground}
       >
         <TouchableOpacity 
-          onPress={() => navigation.navigate('CategoryMaintenance', { category: item, isAdding: false, categoryType: 'expenses' })} 
+          onPress={() => navigation.navigate('CategoryMaintenance', { category: item, isAdding: false, categoryType: 'expenses', categoryID: item.id, onCategoryAdded: () => {
+            fetchCategories() && fetchExpenses; // Atualiza os dados da lista
+          } })} 
           style={styles.editCategoryButton}
         >
           <Icon name="edit" size={24} color="#FFFFFF" />
@@ -365,7 +369,9 @@ const ExpenseStatementScreen = ({ navigation }) => {
                   keyExtractor={item => item.id}
                   renderItem={({ item }) => (
                     <TouchableOpacity
-                      onPress={() => navigation.navigate('AddExpenseScreen', { expense: item, isEditing: true, fromExpenseStatement: true, expenseId: item.id, tela: 'expenses' })}
+                      onPress={() => navigation.navigate('AddExpenseScreen', { expense: item, isEditing: true, fromExpenseStatement: true, expenseId: item.id, tela: 'expenses', onAddExpense: () => {
+                        fetchTotalAmount() && fetchExpenses; // Atualiza os dados da lista
+                      } })}
                     >
                       <View style={styles.expenseItem}>
                         <View style={styles.expenseIconContainer}>

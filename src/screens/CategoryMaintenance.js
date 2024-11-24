@@ -10,7 +10,7 @@ import CustomAlert from '../components/CustomAlert'; // Add CustomAlert import
 import { supabase } from '../services/supabaseClient';
 
 const CategoryMaintenance = ({ navigation, route }) => {
-  const { category, isAdding, categoryType, onCategoryAdded } = route.params || {};
+  const { category, isAdding, categoryType, onCategoryAdded, categoryID } = route.params || {};
   const [categories, setCategories] = useState([]);
   const [categoryName, setCategoryName] = useState(category ? category.name : '');
   const [selectedColor, setSelectedColor] = useState(category ? category.color : 'Amarelo'); // Cor padrão
@@ -56,6 +56,67 @@ const CategoryMaintenance = ({ navigation, route }) => {
           // Não inclua a chave primária (id) aqui, deixe o banco gerar automaticamente
         },
       ]);
+  
+      if (error) {
+        console.error('Erro ao salvar categoria:', error);
+        setAlertMessage('Erro ao salvar a categoria. Por favor, tente novamente.');
+        setAlertVisible(true);
+      } else {
+        console.log('Categoria salva com sucesso:', data);
+        setAlertMessage('Categoria salva com sucesso!');
+        setAlertVisible(true);
+  
+        // Redirecionar ou limpar formulário
+        if (onCategoryAdded) {
+          onCategoryAdded();
+        }
+        navigation.goBack();
+      }
+    } catch (error) {
+      console.error('Erro inesperado:', error);
+      setAlertMessage('Ocorreu um erro inesperado. Por favor, tente novamente.');
+      setAlertVisible(true);
+    }
+  };
+
+  const editCategory = async () => {
+    // Validar campos obrigatórios
+    if (!categoryName || !selectedColor) {
+      setAlertMessage('Todos os campos são obrigatórios.');
+      setAlertVisible(true);
+      return;
+    }
+  
+    // Obter o usuário autenticado
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user?.id) {
+      setAlertMessage('Erro: usuário não autenticado.');
+      setAlertVisible(true);
+      return;
+    }
+  
+    const userId = user.id;
+  
+    try {
+      let tableName = '';
+  
+      // Verifique de qual tela a função foi chamada
+      if (categoryType === 'expenses') {
+        tableName = 'categoriesExpenses'; // Tabela de despesas
+      } else if (categoryType === 'incomes') {
+        tableName = 'categoriesIncomes'; // Tabela de receitas
+      }
+  
+      // Inserir na tabela correta
+      const { data, error } = await supabase.from(tableName).update([
+        {
+          name: categoryName.trim(),
+          color: selectedColor,
+          // Não inclua a chave primária (id) aqui, deixe o banco gerar automaticamente
+        },
+      ])
+      .eq('id', categoryID);
   
       if (error) {
         console.error('Erro ao salvar categoria:', error);
@@ -178,10 +239,7 @@ const CategoryMaintenance = ({ navigation, route }) => {
           {!isAdding && (
             <CustomButton
               label="Finalizar"
-              onPress={() => {
-                console.log('Finalizado!');
-                navigation.goBack();
-              }}
+              onPress={editCategory}
               style={styles.button}
               gradientColors={["#4960F9", "#4033FF"]}
               textStyle={styles.buttonText}
