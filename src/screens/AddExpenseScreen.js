@@ -22,13 +22,7 @@ import * as Location from 'expo-location';
 import { wp, hp, moderateScale } from '../utils/dimensions';
 import CustomAlert from '../components/CustomAlert'; // Add this import
 import { supabase } from '../services/supabaseClient';
-<<<<<<< Updated upstream
 import { API_KEY } from '../config'; // Import the API key from the config file
-import { Alert } from 'react-native';
-=======
-import { API_KEY } from '../config';
->>>>>>> Stashed changes
-
 const { width } = Dimensions.get('window');
 
 const AddExpenseScreen = ({ navigation }) => {
@@ -270,13 +264,10 @@ const AddExpenseScreen = ({ navigation }) => {
         setAlertMessage('Despesa editada com sucesso!');
         setAlertVisible(true);
   
-<<<<<<< Updated upstream
         if (onAddExpense) {
           onAddExpense();
         }
         
-=======
->>>>>>> Stashed changes
         navigation.goBack();
       }
     } catch (error) {
