@@ -6,20 +6,17 @@ const uploadImage = async (username, profileImage) => {
   }
 
   const fileName = `${username}-${Date.now()}.jpg`;
-  const fileBuffer = profileImage.buffer;
-
   const { data: fileData, error: uploadError } = await supabase.storage
     .from('profile-images')
-    .upload(`profile-images/${fileName}`, fileBuffer, {
+    .upload(`profile-images/${fileName}`, profileImage, {
       upsert: false,
-      contentType: 'image/jpeg',
+      contentType: profileImage.type,
     });
 
   if (uploadError) {
     throw new Error(`Error uploading image: ${uploadError.message}`);
   }
 
-  console.log('File data:', fileData);
   return `${supabase.storageUrl}/object/public/${fileData.fullPath}`;
 };
 
@@ -37,6 +34,10 @@ const signUpUser = async (email, password, username, fullName, birthdate, profil
   }
 
   const userId = signUpData.user.id;
+
+  if (!userId) {
+    throw new Error('User ID is null');
+  }
 
   let profileImageUrl = null;
   if (profileImage) {
@@ -72,4 +73,38 @@ const signUpUser = async (email, password, username, fullName, birthdate, profil
   return { user: signUpData.user, profile: profileData };
 };
 
-module.exports = { signUpUser, uploadImage };
+const fetchIncomes = async (userId) => {
+  if (!userId) {
+    throw new Error('User ID is null');
+  }
+
+  const { data, error } = await supabase
+    .from('incomes')
+    .select('*')
+    .eq('user_id', userId);
+
+  if (error) {
+    throw new Error(`Error fetching incomes: ${error.message}`);
+  }
+
+  return data;
+};
+
+const fetchExpenses = async (userId) => {
+  if (!userId) {
+    throw new Error('User ID is null');
+  }
+
+  const { data, error } = await supabase
+    .from('expenses')
+    .select('*')
+    .eq('user_id', userId);
+
+  if (error) {
+    throw new Error(`Error fetching expenses: ${error.message}`);
+  }
+
+  return data;
+};
+
+module.exports = { signUpUser, uploadImage, fetchIncomes, fetchExpenses };

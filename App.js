@@ -40,7 +40,6 @@ const TabNavigator = () => {
 const App = () => {
 
   useEffect(() => {
-    // Ouvir mudanças na autenticação
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       if (session?.user) {
         console.log('Usuário logado:', session.user);
@@ -50,7 +49,7 @@ const App = () => {
     });
 
     return () => {
-      authListener?.unsubscribe();  // Desinscrever o ouvinte quando o componente for desmontado
+      authListener?.subscription?.unsubscribe();  // Desinscrever o ouvinte quando o componente for desmontado
     };
   }, []);
 

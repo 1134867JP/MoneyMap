@@ -36,6 +36,7 @@ const HomeScreen = ({ navigation }) => {
       },
     ],
   });
+  const [monthlyData, setMonthlyData] = useState([]);
 
   useEffect(() => {
     if (userProfile) {
@@ -46,22 +47,89 @@ const HomeScreen = ({ navigation }) => {
 
   useEffect(() => {
     const fetchFinancialData = async () => {
-      const { data: incomes, error: incomesError } = await supabase.from("incomes").select("amount");
-      if (incomesError) {
-        console.error("Error fetching incomes:", incomesError);
-      } else {
-        console.log("Incomes:", incomes);
+      if (!userId) {
+        console.error("User ID is null");
+        return;
       }
+      try {
+        const { data: incomes, error: incomesError } = await supabase
+          .from("incomes")
+          .select("amount, income_date")
+          .eq("user_id", userId);
+        if (incomesError) {
+          console.error("Error fetching incomes:", incomesError);
+        } else {
+          console.log("Fetched incomes:", incomes);
+        }
 
-      const { data: expenses, error: expensesError } = await supabase.from("expenses").select("amount");
-      if (expensesError) {
-        console.error("Error fetching expenses:", expensesError);
-      } else {
-        console.log("Expenses:", expenses);
+        const { data: expenses, error: expensesError } = await supabase
+          .from("expenses")
+          .select("amount, expense_date")
+          .eq("user_id", userId);
+        if (expensesError) {
+          console.error("Error fetching expenses:", expensesError);
+        } else {
+          console.log("Fetched expenses:", expenses);
+        }
+
+        const incomeByMonth = {};
+        const expenseByMonth = {};
+
+        if (incomes) {
+          incomes.forEach((income) => {
+            const month = new Date(income.income_date).getMonth();
+            incomeByMonth[month] = (incomeByMonth[month] || 0) + income.amount;
+          });
+        }
+
+        if (expenses) {
+          expenses.forEach((expense) => {
+            const month = new Date(expense.expense_date).getMonth();
+            expenseByMonth[month] = (expenseByMonth[month] || 0) + expense.amount;
+          });
+        }
+
+        const data = [];
+        const months = [
+          "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+          "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+        ];
+        for (let i = 0; i < 12; i++) {
+          data.push({
+            month: months[i],
+            income: incomeByMonth[i] || 0,
+            expenses: expenseByMonth[i] || 0,
+          });
+        }
+
+        setMonthlyData(data);
+      } catch (error) {
+        console.error("Error in fetchFinancialData:", error);
       }
     };
 
-    fetchFinancialData();
+    if (userId) {
+      fetchFinancialData();
+
+      const incomeSubscription = supabase
+        .channel('public:incomes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'incomes', filter: `user_id=eq.${userId}` }, payload => {
+          fetchFinancialData();
+        })
+        .subscribe();
+
+      const expenseSubscription = supabase
+        .channel('public:expenses')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'expenses', filter: `user_id=eq.${userId}` }, payload => {
+          fetchFinancialData();
+        })
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(incomeSubscription);
+        supabase.removeChannel(expenseSubscription);
+      };
+    }
   }, [userId]);
 
   return (
@@ -90,47 +158,37 @@ const HomeScreen = ({ navigation }) => {
       </TouchableOpacity>
 
       <Text style={styles.greeting}>Bom dia, {fullName}</Text>
-
       <View style={styles.balanceCard}>
         <Text style={styles.balanceTitle}>Suas Finanças</Text>
         <Text style={styles.balanceAmount}>{`R$ ${balance.toFixed(2)}`}</Text>
-        <View style={styles.columns}>
-          <View style={styles.column}>
-            <View style={styles.rectangle18} />
-            <View style={styles.rectangle19} />
-            <Text style={styles.columnLabel}>Jan/24</Text>
+        <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
+          <View style={styles.columns}>
+            {monthlyData.map((item, index) => {
+              const totalAmount = item.income + item.expenses;
+              const incomeHeight = totalAmount ? (item.income / totalAmount) * hp("20%") : 0;
+              const expensesHeight = totalAmount ? (item.expenses / totalAmount) * hp("20%") : 0;
+              return (
+                <View key={index} style={styles.monthColumn}>
+                  <View style={styles.barsContainer}>
+                    <View
+                      style={[
+                        styles.rectangle18,
+                        { height: expensesHeight }
+                      ]}
+                    />
+                    <View
+                      style={[
+                        styles.rectangle19,
+                        { height: incomeHeight }
+                      ]}
+                    />
+                  </View>
+                  <Text style={styles.columnLabel}>{item.month}</Text>
+                </View>
+              );
+            })}
           </View>
-          <View style={styles.column}>
-            <View style={styles.rectangle18} />
-            <View style={styles.rectangle19} />
-            <Text style={styles.columnLabel}>Feb/24</Text>
-          </View>
-          <View style={styles.column}>
-            <View style={styles.rectangle18} />
-            <View style={styles.rectangle19} />
-            <Text style={styles.columnLabel}>Mar/24</Text>
-          </View>
-          <View style={styles.column}>
-            <View style={styles.rectangle18} />
-            <View style={styles.rectangle19} />
-            <Text style={styles.columnLabel}>Apr/24</Text>
-          </View>
-          <View style={styles.column}>
-            <View style={styles.rectangle18} />
-            <View style={styles.rectangle19} />
-            <Text style={styles.columnLabel}>May/24</Text>
-          </View>
-          <View style={styles.column}>
-            <View style={styles.rectangle18} />
-            <View style={styles.rectangle19} />
-            <Text style={styles.columnLabel}>Jun/24</Text>
-          </View>
-          <View style={styles.column}>
-            <View style={styles.rectangle18} />
-            <View style={styles.rectangle19} />
-            <Text style={styles.columnLabel}>Jul/24</Text>
-          </View>
-        </View>
+        </ScrollView>
       </View>
 
       <View style={styles.buttonContainer}>
@@ -264,26 +322,19 @@ const styles = StyleSheet.create({
     width: '100%', // Ensure the columns take full width
     height: hp('20%'), // Increased height to accommodate the labels
     flexDirection: "row",
-    justifyContent: "center",
+    justifyContent: "space-around", // Distribute columns evenly
     alignItems: "flex-end",
   },
-  column: {
+  monthColumn: {
     alignItems: "center",
+    flexDirection: "column",
+    width: wp("6%"),
   },
-  rectangle18: {
-    width: wp('2.5%'),
-    height: hp('10.5%'),
-    backgroundColor: "#2D99FF",
-    marginBottom: hp('0.25%'), // Space between the bars
-    marginRight: wp('0.5%'), // Space between the bars horizontally
-  },
-  rectangle19: {
-    width: wp('2.5%'),
-    height: hp('2.75%'),
-    backgroundColor: "#A5F3FF",
-    transform: [{ scaleY: -1 }],
-    marginTop: hp('0.25%'), // Space between the bars
-    marginLeft: wp('5%'), // Space between the bars horizontally
+  barsContainer: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    justifyContent: "center",
+    height: hp("20%"),
   },
   columnLabel: {
     marginTop: hp('1.5%'), // Space between the column and the label
@@ -292,7 +343,7 @@ const styles = StyleSheet.create({
     transform: [{ rotate: "90deg" }],
   },
   buttonContainer: { 
-    marginTop: hp('60%'), // Adjusted to move buttons up
+    marginTop: hp('62%'), // Adjusted to move buttons up
     paddingHorizontal: wp('7%'),
     paddingBottom: hp('10%'), // Adjust padding to account for the tab bar
   },
@@ -307,11 +358,28 @@ const styles = StyleSheet.create({
   },
   smallButtonRow: { 
     flexDirection: "row", 
-    justifyContent: "space-between" 
+    justifyContent: "space-between" ,
   },
   smallButton: {
     width: "48%",
     borderRadius: moderateScale(40),
     height: moderateScale(30), // Further reduced height
+  },
+  rectangle18: {
+    width: wp('2.5%'),
+    height: hp('10.5%'),
+    backgroundColor: "#2D99FF",
+    marginBottom: hp('0.25%'), // Space between the bars
+    marginRight: wp('0.5%'), // Space between the bars horizontally
+    borderRadius: moderateScale(4),
+  },
+  rectangle19: {
+    width: wp('2.5%'),
+    height: hp('2.75%'),
+    backgroundColor: "#A5F3FF",
+    transform: [{ scaleY: -1 }],
+    marginTop: hp('0.25%'), // Space between the bars
+    marginLeft: wp('0.5%'), // Space between the bars horizontally
+    borderRadius: moderateScale(4),
   },
 });

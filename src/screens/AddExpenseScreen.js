@@ -15,9 +15,9 @@ import { Picker } from '@react-native-picker/picker';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import CustomButton from '../components/CustomButton';
 import BackButton from '../components/BackButton';
-import { CheckBox } from 'react-native-elements';
-import { AirbnbRating } from 'react-native-ratings';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import CheckBox from 'expo-checkbox';
+import CustomRating from '../components/CustomRating'; // Add this import
+import { useRoute } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import { wp, hp, moderateScale } from '../utils/dimensions';
 import CustomAlert from '../components/CustomAlert'; // Add this import
@@ -43,14 +43,13 @@ const AddExpenseScreen = ({ navigation }) => {
   const [alertVisible, setAlertVisible] = useState(false); // Add this state
   const [alertMessage, setAlertMessage] = useState(''); // Add this state
   const [categories, setCategories] = useState([]);
-  const nav = useNavigation();
   const isEditing = route.params?.isEditing || false;
   const fromExpenseStatement = route.params?.fromExpenseStatement || false;
   const [latitude, setLatitude] = useState(null);
   const [longitude, setLongitude] = useState(null);
 
   const getCoordinatesFromAddress = async (address) => {
-    const apiKey = API_KEY; // Substitua com sua chave de API
+    const apiKey = API_KEY;
     try {
       const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${address}&key=${apiKey}`;
       const response = await fetch(url);
@@ -70,23 +69,32 @@ const AddExpenseScreen = ({ navigation }) => {
     }
   };
 
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('categoriesExpenses') // Your Supabase table name
-          .select('id, name'); // Fields you need to fetch
+  const formatCurrency = (value) => {
+    const numericValue = value.replace(/\D/g, '');
+    const formattedValue = (numericValue / 100).toFixed(2).replace('.', ',');
+    return `R$${formattedValue}`;
+  };
 
-        if (error) {
-          console.error('Error fetching categories:', error);
-        } else {
-          setCategories(data); // Set the categories
-        }
-      } catch (error) {
+  const handleAmountChange = (value) => {
+    setAmount(formatCurrency(value));
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('categoriesExpenses')
+        .select('id, name');
+      if (error) {
         console.error('Error fetching categories:', error);
+      } else {
+        setCategories(data);
       }
-    };
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
 
+  useEffect(() => {
     fetchCategories();
   }, []);
 
@@ -110,16 +118,21 @@ const AddExpenseScreen = ({ navigation }) => {
     const userId = user.id;
 
     try {
-      // Obter coordenadas antes de inserir a despesa
-      const coordinates = await getCoordinatesFromAddress(location); // Espera a função retornar as coordenadas
-      if (!coordinates) {
-        setAlertMessage('Erro ao obter coordenadas.');
-        setAlertVisible(true);
-        return;
+      let latitude = null;
+      let longitude = null;
+
+      if (location) {
+        // Obter coordenadas antes de inserir a despesa
+        const coordinates = await getCoordinatesFromAddress(location);
+        if (!coordinates) {
+          setAlertMessage('Erro ao obter coordenadas.');
+          setAlertVisible(true);
+          return;
+        }
+  
+        latitude = coordinates.latitude;
+        longitude = coordinates.longitude;
       }
-  
-      const { latitude, longitude } = coordinates;
-  
     
       // Inserir na tabela `expenses`
       const { data, error } = await supabase.from('expenses').insert([
@@ -137,24 +150,22 @@ const AddExpenseScreen = ({ navigation }) => {
         
       ]);
 
-      await supabase.from('locations').insert([
-        {
-          address: location,
-          rating: rating,
-          name: name.trim(),
-          latitude: latitude,
-          longitude: longitude,
-        },
-        
-        
-      ]);
-      
-  
       if (error) {
         console.error('Erro ao salvar despesa:', error);
         setAlertMessage('Erro ao salvar a despesa. Por favor, tente novamente.');
         setAlertVisible(true);
       } else {
+        if (location) {
+          await supabase.from('locations').insert([
+            {
+              address: location,
+              rating: rating,
+              name: name.trim(),
+              latitude: latitude,
+              longitude: longitude,
+            },
+          ]);
+        }
         console.log('Despesa salva com sucesso:', data);
         setAlertMessage('Despesa salva com sucesso!');
         setAlertVisible(true);
@@ -330,7 +341,7 @@ const AddExpenseScreen = ({ navigation }) => {
               </Picker>
               <TouchableOpacity
                 style={styles.addButton}
-                onPress={() => navigation.navigate('CategoryMaintenance', { isAdding: true, categoryType: 'expenses'  })}
+                onPress={() => navigation.navigate('CategoryMaintenance', { isAdding: true, categoryType: 'expenses', onCategoryAdded: fetchCategories })}
               >
                 <Icon name="add" size={24} color="#FFFFFF" />
               </TouchableOpacity>
@@ -342,7 +353,7 @@ const AddExpenseScreen = ({ navigation }) => {
             <TextInput
               style={styles.input}
               value={amount}
-              onChangeText={setAmount}
+              onChangeText={handleAmountChange}
               keyboardType="numeric"
               placeholderTextColor="#FFFFFF"
             />
@@ -384,31 +395,37 @@ const AddExpenseScreen = ({ navigation }) => {
               />
               <TouchableOpacity
                 style={styles.mapButton}
-                onPress={() => nav.navigate('MapExpenseScreen', { fromAddExpense: true })}
+                onPress={() => {
+                  if (latitude && longitude) {
+                    navigation.navigate('MapExpenseScreen', { fromAddExpense: true, location: { latitude, longitude } });
+                  } else {
+                    Alert.alert('Erro', 'Não foi possível obter a localização atual.');
+                  }
+                }}
               >
                 <Icon name="map" size={24} color="#FFFFFF" />
               </TouchableOpacity>
             </View>
-            <CheckBox
-              title="Usar localização atual"
-              checked={useCurrentLocation}
-              onPress={() => {
-                setUseCurrentLocation(!useCurrentLocation);
-                if (useCurrentLocation) {
-                  setLocation('');
-                }
-              }}
-              containerStyle={styles.checkbox}
-              textStyle={styles.checkboxText}
-            />
+            <View style={styles.checkboxContainer}>
+              <CheckBox
+                value={useCurrentLocation}
+                onValueChange={(newValue) => {
+                  setUseCurrentLocation(newValue);
+                  if (!newValue) {
+                    setLocation('');
+                  }
+                }}
+                style={styles.checkbox}
+              />
+              <Text style={styles.checkboxLabel}>Deseja usar sua localização atual?</Text>
+            </View>
           </View>
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Avaliação</Text>
-            <AirbnbRating
+            <CustomRating
               count={5}
-              reviews={[]}
-              defaultRating={0}
+              defaultRating={rating}
               size={20}
               onFinishRating={setRating}
               starContainerStyle={styles.rating}
@@ -520,19 +537,25 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   rating: {
-    marginTop: -40,
     alignSelf: 'flex-start',
-    marginBottom: -40
+    marginBottom: -10, // Add margin to separate from the checkbox
   },
   checkbox: {
-    backgroundColor: 'transparent',
-    borderWidth: 0,
-    padding: 0,
+    backgroundColor: '#FFFFFF', // Set a visible background color
+    borderWidth: 1,              // Add a border to make it visible
+    borderColor: '#FFFFFF',      // Set border color
+    // ...existing styles...
   },
-  checkboxText: {
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10, // Adjust as needed
+  },
+  checkboxLabel: {
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '700',
+    marginLeft: 8,
   },
   button: {
     marginBottom: 100,

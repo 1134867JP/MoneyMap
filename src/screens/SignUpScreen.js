@@ -49,44 +49,24 @@ const SignUpScreen = ({ navigation }) => {
 
     if (valid) {
       try {
-        const formData = new FormData();
-        formData.append('email', email);
-        formData.append('password', password);
-        formData.append('username', username);
-        formData.append('fullName', fullName);
-        formData.append('birthdate', birthdate);
-        if (profileImage) {
-          const uriParts = profileImage.uri.split('.');
-          const fileType = uriParts[uriParts.length - 1];
-          formData.append('profileImage', {
-            uri: profileImage.uri,
-            name: `profile.${fileType}`,
-            type: `image/${fileType}`,
-          });
-        }
+        const profileImageFile = profileImage ? {
+          uri: profileImage.uri,
+          name: `profile.${profileImage.uri.split('.').pop()}`,
+          type: `image/${profileImage.uri.split('.').pop()}`,
+        } : null;
 
-        const response = await fetch('http://10.0.2.2:3000/signup', { // Use the correct IP for Android emulator
-          method: 'POST',
-          body: formData,
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        });
+        const signUpData = await signUpUser(email, password, username, fullName, birthdate, profileImageFile);
 
-        const result = await response.json();
-
-        if (response.ok) {
-          await fetchUserProfile(result.user); // Fetch and store user profile data in context
-          setUserProfile(result.profile); // Store profile data in context
-          Alert.alert('Sucesso', 'Conta criada com sucesso!');
-          navigation.navigate('HomeTabs'); // Navigate to Home screen
-        } else {
-          let errorMessage = result.error || 'Ocorreu um erro. Por favor, tente novamente.';
-          if (result.error === 'Usuário já registrado. Por favor, faça login.') {
-            errorMessage = 'Usuário já registrado. Por favor, faça login.';
+        if (signUpData.error) {
+          Alert.alert('Erro', signUpData.error);
+          if (signUpData.error === 'Usuário já registrado. Por favor, faça login.') {
             navigation.navigate('Login'); // Navigate to Login screen
           }
-          Alert.alert('Erro', errorMessage);
+        } else {
+          await fetchUserProfile(signUpData.user); // Fetch and store user profile data in context
+          setUserProfile(signUpData.profile); // Store profile data in context
+          Alert.alert('Sucesso', 'Conta criada com sucesso!');
+          navigation.navigate('HomeTabs'); // Navigate to Home screen
         }
       } catch (error) {
         console.log(error);

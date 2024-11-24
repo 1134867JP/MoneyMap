@@ -8,7 +8,9 @@ const UserProvider = ({ children }) => {
   useEffect(() => {
     const fetchCurrentUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
+      if (user) {
+        setUser(user);
+      }
     };
 
     fetchCurrentUser();
@@ -22,15 +24,47 @@ const UserProvider = ({ children }) => {
     });
 
     return () => {
-      if (authListener) {
-        authListener.unsubscribe();
-      }
+      authListener?.subscription?.unsubscribe();
     };
   }, []);
 
   const logout = async () => {
     await supabase.auth.signOut();
     setUser(null);
+  };
+
+  const fetchIncomes = async (userId) => {
+    if (!userId) {
+      throw new Error('User ID is null');
+    }
+  
+    const { data, error } = await supabase
+      .from('incomes')
+      .select('*')
+      .eq('user_id', userId);
+  
+    if (error) {
+      throw new Error(`Error fetching incomes: ${error.message}`);
+    }
+  
+    return data;
+  };
+  
+  const fetchExpenses = async (userId) => {
+    if (!userId) {
+      throw new Error('User ID is null');
+    }
+  
+    const { data, error } = await supabase
+      .from('expenses')
+      .select('*')
+      .eq('user_id', userId);
+  
+    if (error) {
+      throw new Error(`Error fetching expenses: ${error.message}`);
+    }
+  
+    return data;
   };
 
   return (

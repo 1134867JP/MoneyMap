@@ -27,11 +27,19 @@ const ProfileScreen = ({ navigation }) => {
   const [profileImage, setProfileImage] = useState(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
 
+  const formatDate = (date) => {
+    const d = new Date(date);
+    const day = (`0${d.getDate()}`).slice(-2);
+    const month = (`0${d.getMonth() + 1}`).slice(-2);
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
   useEffect(() => {
     if (userProfile) {
       setUsername(userProfile.username || '@Exemplo');
       setFullName(userProfile.full_name || 'Exemplo Teste');
-      setBirthdate(userProfile.birthdate || '20/09/2000');
+      setBirthdate(userProfile.birthdate ? formatDate(userProfile.birthdate) : '20/09/2000');
       setProfileImage(userProfile.profile_image || null);
     }
   }, [userProfile]);
@@ -55,9 +63,8 @@ const ProfileScreen = ({ navigation }) => {
       const updates = {
         username,
         full_name: fullName,
-        birthdate,
+        birthdate: new Date(birthdate.split('/').reverse().join('-')).toISOString(), // Convert to ISO format
         profile_image: profileImage,
-        updated_at: new Date(),
       };
 
       const { error } = await supabase
@@ -66,11 +73,14 @@ const ProfileScreen = ({ navigation }) => {
         .eq('id', userId);
 
       if (error) {
+        console.log(error)
         Alert.alert('Erro', 'Não foi possível atualizar o perfil.');
       } else {
         Alert.alert('Sucesso', 'Perfil atualizado com sucesso.');
         setUserProfile(updates);
       }
+    } else {
+      Alert.alert('Erro', 'ID do usuário é nulo.');
     }
   };
 
@@ -89,14 +99,37 @@ const ProfileScreen = ({ navigation }) => {
 
     if (!pickerResult.cancelled) {
       const { uri } = pickerResult;
-      setProfileImage(uri);
+      const fileName = uri.split('/').pop();
+      const fileType = fileName.split('.').pop();
+      const formData = new FormData();
+      formData.append('file', {
+        uri,
+        name: fileName,
+        type: `image/${fileType}`,
+      });
+
+      const { data, error } = await supabase.storage
+        .from('profile-images')
+        .upload(`public/${userId}/${fileName}`, formData, {
+          cacheControl: '3600',
+          upsert: false,
+        });
+
+      if (error) {
+        Alert.alert('Erro', 'Não foi possível fazer upload da imagem.');
+      } else {
+        const imageUrl = supabase.storage
+          .from('profile-images')
+          .getPublicUrl(`public/${userId}/${fileName}`).publicURL;
+        setProfileImage(imageUrl);
+      }
     }
   };
 
   const handleDateChange = (event, selectedDate) => {
     setShowDatePicker(false);
     if (selectedDate) {
-      setBirthdate(selectedDate.toLocaleDateString('pt-BR'));
+      setBirthdate(formatDate(selectedDate));
     }
   };
 

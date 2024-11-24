@@ -35,3 +35,4 @@ yarn-error.*
 *.tsbuildinfo
 src/services/supabaseClient.js
 src/config.js
+.env

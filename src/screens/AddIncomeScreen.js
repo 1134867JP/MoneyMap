@@ -31,25 +31,35 @@ const AddIncomeScreen = ({ navigation, route }) => {
   const [alertMessage, setAlertMessage] = useState(''); // Add this state
   const [categories, setCategories] = useState([]);
 
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('categoriesIncomes') // Your Supabase table name
-          .select('id, name'); // Fields you need to fetch
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('categoriesIncomes') // Your Supabase table name
+        .select('id, name'); // Fields you need to fetch
 
-        if (error) {
-          console.error('Error fetching categories:', error);
-        } else {
-          setCategories(data); // Set the categories
-        }
-      } catch (error) {
+      if (error) {
         console.error('Error fetching categories:', error);
+      } else {
+        setCategories(data); // Set the categories
       }
-    };
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
 
+  useEffect(() => {
     fetchCategories();
   }, []);
+
+  const formatCurrency = (value) => {
+    const numericValue = value.replace(/\D/g, '');
+    const formattedValue = (numericValue / 100).toFixed(2).replace('.', ',');
+    return `R$${formattedValue}`;
+  };
+
+  const handleAmountChange = (value) => {
+    setAmount(formatCurrency(value));
+  };
 
   const saveIncome = async () => {
     // Validar campos obrigatórios
@@ -179,6 +189,8 @@ const AddIncomeScreen = ({ navigation, route }) => {
     
     } catch (error) {
       console.error('Erro ao excluir a receita:', error.message);
+      setAlertMessage('Erro ao excluir a receita. Por favor, tente novamente.');
+      setAlertVisible(true);
     }
   };
 
@@ -220,7 +232,7 @@ const AddIncomeScreen = ({ navigation, route }) => {
               </Picker>
               <TouchableOpacity
                 style={styles.addButton}
-                onPress={() => navigation.navigate('CategoryMaintenance', { isAdding: true, categoryType: 'incomes' })}
+                onPress={() => navigation.navigate('CategoryMaintenance', { isAdding: true, categoryType: 'incomes', onCategoryAdded: fetchCategories })}
               >
                 <Icon name="add" size={24} color="#FFFFFF" />
               </TouchableOpacity>
@@ -232,7 +244,7 @@ const AddIncomeScreen = ({ navigation, route }) => {
             <TextInput
               style={styles.input}
               value={amount}
-              onChangeText={setAmount}
+              onChangeText={handleAmountChange}
               keyboardType="numeric"
               placeholderTextColor="#FFFFFF"
             />
@@ -400,4 +412,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AddIncomeScreen;
+export default AddIncomeScreen

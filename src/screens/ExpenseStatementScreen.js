@@ -18,10 +18,13 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import MapIcon from '../components/mapIcon';
 import CustomAlert from '../components/CustomAlert'; // Add CustomAlert import
 import { supabase } from '../services/supabaseClient';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import * as Location from 'expo-location'; // Add this import
 
 const { width } = Dimensions.get('window');
 
 const ExpenseStatementScreen = ({ navigation }) => {
+  const nav = useNavigation();
   const [modalVisible, setModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortModalVisible, setSortModalVisible] = useState(false);
@@ -35,6 +38,7 @@ const ExpenseStatementScreen = ({ navigation }) => {
   const [totalAmount, setTotalAmount] = useState(0); // Estado para armazenar o total
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true); // Estado para controlar o carregamento
+  const [currentLocation, setCurrentLocation] = useState(null); // Add this state
 
   useEffect(() => {
     const fetchTotalAmount = async () => {
@@ -148,6 +152,79 @@ const ExpenseStatementScreen = ({ navigation }) => {
     fetchCategories();
   }, []);
 
+  useFocusEffect(
+    React.useCallback(() => {
+      const fetchExpenses = async () => {
+        try {
+          // Obter o usuário autenticado
+          const { data: { user }, error: userError } = await supabase.auth.getUser();
+          
+          if (userError || !user?.id) {
+            console.log('Erro ao obter o usuário');
+            return;
+          }
+        
+          const userId = user.id;
+  
+          // Buscar as despesas do usuário
+          const { data, error } = await supabase
+            .from('expenses')
+            .select('*')
+            .eq('user_id', userId)
+            .order('expense_date', { ascending: false });
+  
+          if (error) {
+            console.error('Erro ao buscar despesas:', error);
+          } else {
+            setExpenses(data); // Atualiza a lista de despesas
+          }
+        } catch (error) {
+          console.error('Erro ao carregar despesas:', error);
+        }
+      };
+  
+      fetchExpenses();
+    }, [])
+  );
+
+  useFocusEffect(
+    React.useCallback(() => {
+      // Function to fetch and set expenses
+      const fetchExpenses = async () => {
+        // ...existing data fetching logic...
+      };
+
+      fetchExpenses();
+
+      // Listener for expense updates
+      const unsubscribe = nav.addListener('expenseUpdated', () => {
+        fetchExpenses();
+      });
+
+      return () => {
+        unsubscribe();
+      };
+    }, [nav])
+  );
+
+  useEffect(() => {
+    const fetchCurrentLocation = async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        console.log('Permission to access location was denied');
+        return;
+      }
+
+      let location = await Location.getCurrentPositionAsync({});
+      setCurrentLocation({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      });
+    };
+
+    fetchCurrentLocation();
+  }, []);
+
   const screenHeight = Dimensions.get('window').height;
   const minimizedHeight = 200; 
   const maximizedHeight = screenHeight * 0.7;
@@ -191,7 +268,13 @@ const ExpenseStatementScreen = ({ navigation }) => {
           <Text style={styles.totalAmount}>R${totalAmount.toFixed(2)}</Text>
         </View>
       </LinearGradient>
-      <MapIcon />
+      <MapIcon onPress={() => {
+        if (currentLocation) {
+          navigation.navigate('MapExpenseScreen', { location: currentLocation });
+        } else {
+          Alert.alert('Erro', 'Não foi possível obter a localização atual.');
+        }
+      }} />
 
       <Text style={styles.subtitle}>Acompanhe suas despesas</Text>
 
@@ -633,16 +716,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#E5E5E5',
   },
   expenseDetails: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  expenseCategory: {
-    fontSize: 16,
-    color: '#FFFFFF', // Adjusted color
-  },
-  expenseDate: {
-    fontSize: 14,
-    color: '#FFFFFF', // Adjusted color
+    flex: 1,    justifyContent: 'center',  },  expenseCategory: {    fontSize: 16,    color: '#FFFFFF', // Adjusted color  },  expenseDate: {    fontSize: 14,    color: '#FFFFFF', // Adjusted color
     marginTop: 5,
   },
   expenseAmount: {

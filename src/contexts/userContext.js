@@ -3,6 +3,42 @@ import { supabase } from '../services/supabaseClient';
 
 const UserContext = createContext();
 
+const fetchIncomes = async (userId) => {
+  if (!userId) {
+    console.error('User ID is null');
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from('incomes')
+    .select('*')
+    .eq('user_id', userId);
+
+  if (error) {
+    throw new Error(`Error fetching incomes: ${error.message}`);
+  }
+
+  return data;
+};
+
+const fetchExpenses = async (userId) => {
+  if (!userId) {
+    console.error('User ID is null');
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from('expenses')
+    .select('*')
+    .eq('user_id', userId);
+
+  if (error) {
+    throw new Error(`Error fetching expenses: ${error.message}`);
+  }
+
+  return data;
+};
+
 export const UserProvider = ({ children }) => {
   const [userId, setUserId] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
@@ -35,6 +71,8 @@ export const UserProvider = ({ children }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         fetchUserProfile(user);
+      } else {
+        console.log('Usuário não autenticado');
       }
     };
 
@@ -50,14 +88,12 @@ export const UserProvider = ({ children }) => {
     });
 
     return () => {
-      if (authListener && authListener.subscription) {
-        authListener.subscription.unsubscribe();
-      }
+      authListener?.subscription?.unsubscribe();
     };
   }, []);
 
   return (
-    <UserContext.Provider value={{ userId, userProfile, setUserProfile, fetchUserProfile, logout }}>
+    <UserContext.Provider value={{ userId, userProfile, setUserProfile, fetchUserProfile, fetchIncomes, fetchExpenses, logout }}>
       {children}
     </UserContext.Provider>
   );

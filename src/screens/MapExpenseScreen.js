@@ -14,7 +14,7 @@ const { width, height } = Dimensions.get('window');
 Geocoder.init(API_KEY);
 
 const MapExpenseScreen = () => {
-  const { location, loading } = useContext(LocationContext);
+  const { location: contextLocation, loading } = useContext(LocationContext);
   const [region, setRegion] = useState(null);
   const [marker, setMarker] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -24,15 +24,20 @@ const MapExpenseScreen = () => {
   const mapRef = useRef(null); // Add a ref for the MapView
 
   useEffect(() => {
-    if (location) {
+    const initialLocation = route.params?.location || contextLocation;
+    if (initialLocation) {
       setRegion({
-        latitude: location.latitude,
-        longitude: location.longitude,
+        latitude: initialLocation.latitude,
+        longitude: initialLocation.longitude,
         latitudeDelta: 0.0922,
         longitudeDelta: 0.0421,
       });
+      setMarker({
+        latitude: initialLocation.latitude,
+        longitude: initialLocation.longitude,
+      });
     }
-  }, [location]);
+  }, [route.params?.location, contextLocation]);
 
   const handleMapPress = async (e) => {
     const { latitude, longitude } = e.nativeEvent.coordinate;

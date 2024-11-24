@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, Text, TouchableOpacity, StyleSheet, Dimensions, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback, Animated } from 'react-native';
+import { View, TextInput, Text, TouchableOpacity, StyleSheet, Dimensions, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback, Animated, ActivityIndicator } from 'react-native';
 import AuthScreenLayout from '../components/AuthScreenLayout';
 import CustomButton from '../components/CustomButton';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -17,6 +17,7 @@ const LoginScreen = ({ navigation }) => {
   const [footerBottom, setFooterBottom] = useState(new Animated.Value(20));
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const { fetchUserProfile } = userAuth();
 
@@ -44,9 +45,11 @@ const LoginScreen = ({ navigation }) => {
   }, [footerBottom]);
 
   const handleLogin = async () => {
+    setIsLoading(true);
     if (!email || !password) {
       setAlertMessage('Por favor, preencha todos os campos.');
       setAlertVisible(true);
+      setIsLoading(false);
       return;
     }
 
@@ -67,10 +70,12 @@ const LoginScreen = ({ navigation }) => {
       }
       setAlertMessage(errorMessage);
       setAlertVisible(true);
+      setIsLoading(false);
     } else {
       const userData = data.user;
       await fetchUserProfile(userData); // Fetch and store user profile data in context
       navigation.navigate('HomeTabs');
+      setIsLoading(false);
     }
   };
 
@@ -134,7 +139,11 @@ const LoginScreen = ({ navigation }) => {
 
       {/* Botão de login fixo na parte inferior */}
       <Animated.View style={[styles.footer, { bottom: footerBottom }]}>
-        <CustomButton label="Entrar" onPress={handleLogin} />
+        {isLoading ? (
+          <ActivityIndicator size="large" color="#6200ee" />
+        ) : (
+          <CustomButton label="Entrar" onPress={handleLogin} />
+        )}
       </Animated.View>
 
       {/* Custom Alert */}

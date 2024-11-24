@@ -17,10 +17,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import CustomAlert from '../components/CustomAlert'; // Add CustomAlert import
 import { supabase } from '../services/supabaseClient';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
 
 const IncomeStatementScreen = ({ navigation }) => {
+  const nav = useNavigation();
   const [modalVisible, setModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortModalVisible, setSortModalVisible] = useState(false); // Add state for sort modal visibility
@@ -147,6 +149,25 @@ const IncomeStatementScreen = ({ navigation }) => {
   
     fetchCategories();
   }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const fetchIncomes = async () => {
+        // ...existing data fetching logic...
+      };
+
+      fetchIncomes();
+
+      // Listener for income updates
+      const unsubscribe = nav.addListener('incomeUpdated', () => {
+        fetchIncomes();
+      });
+
+      return () => {
+        unsubscribe();
+      };
+    }, [nav])
+  );
 
   const transactions = [
     { id: '1', category: 'Salario', amount: 1500, date: '15 Mar 2019, 8:20 PM' },

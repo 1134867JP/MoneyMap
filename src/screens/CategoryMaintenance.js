@@ -10,7 +10,7 @@ import CustomAlert from '../components/CustomAlert'; // Add CustomAlert import
 import { supabase } from '../services/supabaseClient';
 
 const CategoryMaintenance = ({ navigation, route }) => {
-  const { category, isAdding, categoryType } = route.params || {}
+  const { category, isAdding, categoryType, onCategoryAdded } = route.params || {};
   const [categories, setCategories] = useState([]);
   const [categoryName, setCategoryName] = useState(category ? category.name : '');
   const [selectedColor, setSelectedColor] = useState(category ? category.color : 'Amarelo'); // Cor padrão
@@ -67,6 +67,9 @@ const CategoryMaintenance = ({ navigation, route }) => {
         setAlertVisible(true);
   
         // Redirecionar ou limpar formulário
+        if (onCategoryAdded) {
+          onCategoryAdded();
+        }
         navigation.goBack();
       }
     } catch (error) {
@@ -116,13 +119,15 @@ const CategoryMaintenance = ({ navigation, route }) => {
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       >
-        <View style={styles.backButtonContainer}>
+        <View style={styles.headerContainer}>
           <BackButton color="white" />
+          <View style={styles.headerTitleContainer}>
+            <Text style={styles.headerTitle}>
+              {isAdding ? 'Adicionar Categoria' : 'Manutenção de Categorias'}
+            </Text>
+          </View>
         </View>
         <ScrollView style={styles.formContainer} contentContainerStyle={styles.scrollContent}>
-          <Text style={styles.title}>
-            {isAdding ? 'Adicionar Categoria' : 'Manutenção de Categorias'}
-          </Text>
           <View style={styles.inputContainer}>
             <TextInput
               style={styles.input}
@@ -205,7 +210,9 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 0,
   },
-  backButtonContainer: {
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     position: 'absolute',
     top: hp(7.5),
     left: wp(5.3),
@@ -223,7 +230,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: '#FFFFFF',
-    marginBottom: 16,
+    marginLeft: 16,
   },
   inputContainer: {
     flexDirection: 'row',
@@ -297,6 +304,18 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: moderateScale(14),
     color: '#FFFFFF',
+  },
+  headerTitleContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: -wp(5.3), // Adjust margin to center the title
+  },
+  headerTitle: {
+    color: '#FFFFFF',
+    fontSize: moderateScale(20),
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
 });
 
