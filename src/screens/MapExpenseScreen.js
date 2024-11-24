@@ -11,7 +11,7 @@ import { API_KEY } from '../config';
 
 const { width, height } = Dimensions.get('window');
 
-Geocoder.init(API_KEY, { language: 'pt' }); // Add language parameter for Portuguese
+Geocoder.init(API_KEY, { language: 'pt' });
 
 const MapExpenseScreen = () => {
   const { location: contextLocation, loading } = useContext(LocationContext);
@@ -21,16 +21,35 @@ const MapExpenseScreen = () => {
   const [suggestions, setSuggestions] = useState([]);
   const navigation = useNavigation();
   const route = useRoute();
-  const mapRef = useRef(null); // Add a ref for the MapView
+  const mapRef = useRef(null);
 
   useEffect(() => {
-    const initialLocation = route.params?.location || { latitude: -23.55052, longitude: -46.633308 }; // Default location
-    setRegion({
-      latitude: initialLocation.latitude,
-      longitude: initialLocation.longitude,
-      latitudeDelta: 0.0922,
-      longitudeDelta: 0.0421,
-    });
+    const getCurrentLocation = async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permissão negada', 'Permissão para acessar a localização foi negada.');
+        return;
+      }
+
+      let location = await Location.getCurrentPositionAsync({});
+      setRegion({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        latitudeDelta: 0.0922,
+        longitudeDelta: 0.0421,
+      });
+    };
+
+    if (route.params?.location) {
+      setRegion({
+        latitude: route.params.location.latitude,
+        longitude: route.params.location.longitude,
+        latitudeDelta: 0.0922,
+        longitudeDelta: 0.0421,
+      });
+    } else {
+      getCurrentLocation();
+    }
   }, [route.params?.location]);
 
   const handleMapPress = async (e) => {
@@ -49,7 +68,26 @@ const MapExpenseScreen = () => {
         navigation.navigate('AddExpenseScreen', { selectedAddress: address });
       }
     } catch (error) {
-      console.warn(error);
+      console.warn('Error in handleMapPress:', error);
+    }
+  };
+
+  const handleConfirmLocation = async () => {
+    if (marker) {
+      try {
+        const json = await Geocoder.from(marker.latitude, marker.longitude);
+        if (json.status === 'ZERO_RESULTS') {
+          Alert.alert('Nenhum resultado encontrado', 'Não foi possível encontrar um endereço para esta localização.');
+          return;
+        }
+        const address = json.results[0].formatted_address;
+        if (route.params?.fromAddExpense) {
+          console.log('Navigating to AddExpenseScreen with address:', address);
+          navigation.navigate('AddExpenseScreen', { selectedAddress: address });
+        }
+      } catch (error) {
+        console.warn('Error in handleConfirmLocation:', error);
+      }
     }
   };
 
@@ -102,7 +140,7 @@ const MapExpenseScreen = () => {
       });
       setSuggestions([]);
       if (mapRef.current) {
-        mapRef.current.animateToRegion(newRegion, 1000); // Animate to the new region
+        mapRef.current.animateToRegion(newRegion, 1000);
       }
     } catch (error) {
       console.error('Error fetching place details:', error);
@@ -121,10 +159,10 @@ const MapExpenseScreen = () => {
     <View style={styles.container}>
       {region && (
         <MapView
-          ref={mapRef} // Anexe a referência ao MapView
+          ref={mapRef}
           style={styles.map}
-          initialRegion={region} // Use initialRegion em vez de region
-          onRegionChangeComplete={setRegion} // Garanta que o estado da região seja atualizado
+          region={region}
+          onRegionChangeComplete={setRegion}
           onPress={handleMapPress}
         >
           {marker && (
@@ -139,7 +177,7 @@ const MapExpenseScreen = () => {
           placeholder="Pesquisar no Google"
           value={searchQuery}
           onChangeText={handleInputChange}
-          onSubmitEditing={handleSearch} // Mantenha a busca de sugestões ao pressionar Enter
+          onSubmitEditing={handleSearch}
         />
         <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
           <Icon name="search" size={24} color="#FFFFFF" />
@@ -157,11 +195,7 @@ const MapExpenseScreen = () => {
           style={styles.suggestionsList}
         />
       )}
-      <TouchableOpacity style={styles.floatingButton} onPress={() => {
-        if (marker) {
-          handleMapPress({ nativeEvent: { coordinate: marker } });
-        }
-      }}>
+      <TouchableOpacity style={styles.floatingButton} onPress={handleConfirmLocation}>
         <Text style={styles.floatingButtonText}>Confirmar Localização</Text>
       </TouchableOpacity>
     </View>
@@ -190,11 +224,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
-    alignItems: 'center', // Centralize verticalmente
+    alignItems: 'center',
   },
   backButton: {
     marginRight: 10,
-    alignSelf: 'center', // Centralize horizontalmente
+    alignSelf: 'center',
   },
   searchInput: {
     flex: 1,
