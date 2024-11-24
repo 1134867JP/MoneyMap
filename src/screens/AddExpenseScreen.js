@@ -22,8 +22,12 @@ import * as Location from 'expo-location';
 import { wp, hp, moderateScale } from '../utils/dimensions';
 import CustomAlert from '../components/CustomAlert'; // Add this import
 import { supabase } from '../services/supabaseClient';
+<<<<<<< Updated upstream
 import { API_KEY } from '../config'; // Import the API key from the config file
 import { Alert } from 'react-native';
+=======
+import { API_KEY } from '../config';
+>>>>>>> Stashed changes
 
 const { width } = Dimensions.get('window');
 
@@ -50,9 +54,8 @@ const AddExpenseScreen = ({ navigation }) => {
   const [longitude, setLongitude] = useState(null);
 
   const getCoordinatesFromAddress = async (address) => {
-    const apiKey = API_KEY;
     try {
-      const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${address}&key=${apiKey}`;
+      const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${address}&key=${API_KEY}`;
       const response = await fetch(url);
       const data = await response.json();
   
@@ -267,10 +270,13 @@ const AddExpenseScreen = ({ navigation }) => {
         setAlertMessage('Despesa editada com sucesso!');
         setAlertVisible(true);
   
+<<<<<<< Updated upstream
         if (onAddExpense) {
           onAddExpense();
         }
         
+=======
+>>>>>>> Stashed changes
         navigation.goBack();
       }
     } catch (error) {
@@ -278,6 +284,36 @@ const AddExpenseScreen = ({ navigation }) => {
       setAlertMessage('Ocorreu um erro inesperado. Por favor, tente novamente.');
       setAlertVisible(true);
     }
+  };
+
+  const handleMapPress = async () => {
+    let coordinates = { latitude: null, longitude: null };
+  
+    if (useCurrentLocation) {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        setAlertMessage('Permissão para acessar a localização foi negada.');
+        setAlertVisible(true);
+        return;
+      }
+  
+      let location = await Location.getCurrentPositionAsync({});
+      coordinates = {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      };
+    } else if (location) {
+      const fetchedCoordinates = await getCoordinatesFromAddress(location);
+      if (fetchedCoordinates) {
+        coordinates = fetchedCoordinates;
+      } else {
+        setAlertMessage('Não foi possível obter a localização do endereço fornecido.');
+        setAlertVisible(true);
+        return;
+      }
+    }
+  
+    navigation.navigate('MapExpenseScreen', { fromAddExpense: true, location: coordinates });
   };
 
   useEffect(() => {
@@ -416,13 +452,7 @@ const AddExpenseScreen = ({ navigation }) => {
               />
               <TouchableOpacity
                 style={styles.mapButton}
-                onPress={() => {
-                  if (latitude && longitude) {
-                    navigation.navigate('MapExpenseScreen', { fromAddExpense: true, location: { latitude, longitude } });
-                  } else {
-                    Alert.alert('Erro', 'Não foi possível obter a localização atual.');
-                  }
-                }}
+                onPress={handleMapPress}
               >
                 <Icon name="map" size={24} color="#FFFFFF" />
               </TouchableOpacity>

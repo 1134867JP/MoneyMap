@@ -5,12 +5,12 @@ import Geocoder from 'react-native-geocoding';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { FontAwesome } from '@expo/vector-icons';
 import BackButton from '../components/BackButton'
-import { API_KEY } from '../config'; // Import the API key from the config file
 import { supabase } from '../services/supabaseClient';
+import { API_KEY } from '../config';
 
 const { width, height } = Dimensions.get('window');
 
-Geocoder.init(API_KEY);
+Geocoder.init(API_KEY, { language: 'pt' });
 
 const MapScreen = () => {
   const [region, setRegion] = useState({

@@ -7,11 +7,11 @@ import * as Location from 'expo-location';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import BackButton from '../components/BackButton';
 import { LocationContext } from '../contexts/LocationContext';
-import { API_KEY } from '../config'; // Import the API key from the config file
+import { API_KEY } from '../config';
 
 const { width, height } = Dimensions.get('window');
 
-Geocoder.init(API_KEY);
+Geocoder.init(API_KEY, { language: 'pt' }); // Add language parameter for Portuguese
 
 const MapExpenseScreen = () => {
   const { location: contextLocation, loading } = useContext(LocationContext);
@@ -24,20 +24,14 @@ const MapExpenseScreen = () => {
   const mapRef = useRef(null); // Add a ref for the MapView
 
   useEffect(() => {
-    const initialLocation = route.params?.location || contextLocation;
-    if (initialLocation) {
-      setRegion({
-        latitude: initialLocation.latitude,
-        longitude: initialLocation.longitude,
-        latitudeDelta: 0.0922,
-        longitudeDelta: 0.0421,
-      });
-      setMarker({
-        latitude: initialLocation.latitude,
-        longitude: initialLocation.longitude,
-      });
-    }
-  }, [route.params?.location, contextLocation]);
+    const initialLocation = route.params?.location || { latitude: -23.55052, longitude: -46.633308 }; // Default location
+    setRegion({
+      latitude: initialLocation.latitude,
+      longitude: initialLocation.longitude,
+      latitudeDelta: 0.0922,
+      longitudeDelta: 0.0421,
+    });
+  }, [route.params?.location]);
 
   const handleMapPress = async (e) => {
     const { latitude, longitude } = e.nativeEvent.coordinate;
@@ -52,7 +46,7 @@ const MapExpenseScreen = () => {
       const address = json.results[0].formatted_address;
       if (route.params?.fromAddExpense) {
         console.log('Navigating to AddExpenseScreen with address:', address);
-        navigation.navigate('AddExpenseScreen', { selectedAddress : address });
+        navigation.navigate('AddExpenseScreen', { selectedAddress: address });
       }
     } catch (error) {
       console.warn(error);
@@ -63,7 +57,7 @@ const MapExpenseScreen = () => {
     fetchSuggestions(searchQuery);
   };
 
-  const fetchSuggestions = async (query) => {
+  const fetchSuggestions = async (query) => { 
     try {
       const response = await fetch(`https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${query}&key=${API_KEY}`);
       const json = await response.json();
@@ -127,10 +121,10 @@ const MapExpenseScreen = () => {
     <View style={styles.container}>
       {region && (
         <MapView
-          ref={mapRef} // Attach the ref to the MapView
+          ref={mapRef} // Anexe a referência ao MapView
           style={styles.map}
-          initialRegion={region} // Use initialRegion instead of region
-          onRegionChangeComplete={setRegion} // Ensure region state is updated
+          initialRegion={region} // Use initialRegion em vez de region
+          onRegionChangeComplete={setRegion} // Garanta que o estado da região seja atualizado
           onPress={handleMapPress}
         >
           {marker && (
