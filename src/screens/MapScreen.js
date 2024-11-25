@@ -45,6 +45,12 @@ const MapScreen = () => {
     fetchLocations();
   }, []);
 
+  useEffect(() => {
+    if (mapRef.current && region) {
+      mapRef.current.animateToRegion(region, 1000);
+    }
+  }, [region, locations]);
+
   const fetchSuggestions = async (query) => {
     try {
       const response = await fetch(`https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${query}&key=${API_KEY}`);

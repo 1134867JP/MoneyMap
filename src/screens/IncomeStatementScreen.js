@@ -18,6 +18,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import CustomAlert from '../components/CustomAlert'; // Add CustomAlert import
 import { supabase } from '../services/supabaseClient';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useCallback } from 'react';
 
 const { width } = Dimensions.get('window');
 
@@ -75,6 +76,60 @@ const IncomeStatementScreen = ({ navigation }) => {
     }
   };
 
+  const [categoryTotals, setCategoryTotals] = useState({});
+
+  // Função para buscar o valor total de amount da tabela incomes com base no category_id
+  const fetchCategoryTotal = async (categoryId) => {
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user?.id) {
+        console.log('Erro ao obter o usuário');
+        setLoading(false);
+        return;
+      }
+      
+      const userId = user.id;
+
+
+      const { data, error } = await supabase
+        .from('incomes')
+        .select('amount')
+        .eq('user_id', userId)
+        .eq('category_id', categoryId);
+
+      if (error) {
+        console.error('Erro ao buscar o total de amount:', error);
+      } else {
+        // Calcula a soma dos valores de amount
+        const totalAmount = data.reduce((acc, curr) => acc + curr.amount, 0);
+        setCategoryTotals((prevTotals) => ({
+          ...prevTotals,
+          [categoryId]: totalAmount, // Armazena o total calculado para o category_id
+        }));
+      }
+    } catch (error) {
+      console.error('Erro ao buscar o total de amount:', error);
+    }
+  };
+
+  // Chama a função para buscar os totais ao carregar o componente
+  useEffect(() => {
+    categories.forEach((category) => {
+      fetchCategoryTotal(category.id); // Carrega o total para cada categoria
+    });
+  }, [categories]);
+
+  useFocusEffect(
+    useCallback(() => {
+      // Atualize os valores das categorias aqui
+      categories.forEach((category) => {
+        if (category.id) {
+          fetchCategoryTotal(category.id);
+        }
+      });
+    }, [categories]) // Dependências necessárias
+  );
 
   useEffect(() => {
     fetchTotalAmount();
@@ -265,10 +320,10 @@ const IncomeStatementScreen = ({ navigation }) => {
         </View>
         <Text style={styles.transactionCategory}>{item.name}</Text>
         <Text style={styles.transactionAmount}>
-          {item.budget 
-            ? `R$00` 
-            : 'Sem orçamento'}
-        </Text>
+              {categoryTotals[item.id]
+                ? `R$ ${categoryTotals[item.id].toFixed(2)}`
+                : 'Sem orçamento'}
+            </Text>
       </LinearGradient>
     </View>
   ))}
