@@ -39,6 +39,24 @@ const fetchExpenses = async (userId) => {
   return data;
 };
 
+const fetchNotifications = async (userId) => {
+  if (!userId) {
+    console.error('User ID is null');
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from('notifications')
+    .select('*')
+    .eq('user_id', userId);
+
+  if (error) {
+    throw new Error(`Error fetching notifications: ${error.message}`);
+  }
+
+  return data;
+};
+
 export const UserProvider = ({ children }) => {
   const [userId, setUserId] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
@@ -93,7 +111,7 @@ export const UserProvider = ({ children }) => {
   }, []);
 
   return (
-    <UserContext.Provider value={{ userId, userProfile, setUserProfile, fetchUserProfile, fetchIncomes, fetchExpenses, logout }}>
+    <UserContext.Provider value={{ userId, userProfile, setUserProfile, fetchUserProfile, fetchIncomes, fetchExpenses, fetchNotifications, logout }}>
       {children}
     </UserContext.Provider>
   );

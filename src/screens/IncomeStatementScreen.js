@@ -226,18 +226,6 @@ const IncomeStatementScreen = ({ navigation }) => {
     }, [nav])
   );
 
-  const transactions = [
-    { id: '1', category: 'Salario', amount: 1500, date: '15 Mar 2019, 8:20 PM' },
-    { id: '2', category: 'Freelance', amount: 800, date: '15 Mar 2019, 12:10 AM' },
-    { id: '3', category: 'Investimento', amount: 500, date: '15 Mar 2019, 7:20 PM' },
-    { id: '4', category: 'Presente', amount: 200, date: '5 Mar 2019, 6:20 PM' },
-    { id: '5', category: 'Outros', amount: 300, date: '2 Mar 2019, 6:55 PM' },
-  ];
-
-  const filteredModalTransactions = transactions.filter(transaction =>
-    transaction.category.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   const sortTransactions = (option) => {
     switch (option) {
       case 'amount':
@@ -271,6 +259,16 @@ const IncomeStatementScreen = ({ navigation }) => {
     setCategoryName('');
     setAlertMessage('Categoria adicionada com sucesso!');
     setAlertVisible(true);
+  };
+
+  const getCategoryColor = (categoryId) => {
+    const category = categories.find(cat => cat.id === categoryId);
+    return category ? getGradientColors(category.color)[0] : '#FFCF87'; // Default color if not found
+  };
+
+  const formatDateToBrazilian = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('pt-BR');
   };
 
   return (
@@ -385,20 +383,17 @@ const IncomeStatementScreen = ({ navigation }) => {
                     >
                       <View style={styles.incomeItem}>
                         <View style={styles.incomeIconContainer}>
-                        <LinearGradient
-                          colors={getGradientColorsCat(item.name)}
-                          style={styles.expenseIcon}
-                        >
-                          <Icon 
-                            name={getCategoryIcon(item.name)} 
-                            size={36} 
-                            color="#FFFFFF" 
-                          />
-                        </LinearGradient>
+                          <View style={[styles.circleIcon, { backgroundColor: getCategoryColor(item.category_id) }]}>
+                            <Icon 
+                              name="attach-money" 
+                              size={24} 
+                              color="#FFFFFF" 
+                            />
+                          </View>
                         </View>
                         <View style={styles.incomeDetails}>
                           <Text style={styles.incomeCategory}>{item.name}</Text>
-                          <Text style={styles.incomeDate}>{item.income_date}</Text>
+                          <Text style={styles.incomeDate}>{formatDateToBrazilian(item.income_date)}</Text>
                         </View>
                         <Text style={styles.incomeAmount}>R${Math.abs(item.amount).toFixed(2)}</Text>
                       </View>
@@ -423,20 +418,17 @@ const IncomeStatementScreen = ({ navigation }) => {
                   renderItem={({ item }) => (
                     <View style={styles.incomeItem}>
                       <View style={styles.incomeIconContainer}>
-                      <LinearGradient
-                          colors={getGradientColorsCat(item.name)}
-                          style={styles.expenseIcon}
-                        >
+                        <View style={[styles.circleIcon, { backgroundColor: getCategoryColor(item.category_id) }]}>
                           <Icon 
-                            name={getCategoryIcon(item.name)} 
-                            size={36} 
+                            name="attach-money" 
+                            size={24} 
                             color="#FFFFFF" 
                           />
-                        </LinearGradient>
+                        </View>
                       </View>
                       <View style={styles.incomeDetails}>
                         <Text style={styles.incomeCategory}>{item.name}</Text>
-                        <Text style={styles.incomeDate}>{item.income_date}</Text>
+                        <Text style={styles.incomeDate}>{formatDateToBrazilian(item.income_date)}</Text>
                       </View>
                       <Text style={styles.incomeAmount}>R${Math.abs(item.amount).toFixed(2)}</Text>
                     </View>
@@ -513,28 +505,18 @@ const getGradientColors = (category) => {
 
 const getGradientColorsCat = (category) => {
   switch (category.toLowerCase()) {
-    case 'amarelo':
+    case 'salario':
       return ['#DAA520', '#DAA520'];
-    case 'azul':
+    case 'freelance':
       return ['#0000CD', '#0000CD'];
-    case 'vermelho':
+    case 'investimento':
       return ['#8B0000', '#8B0000'];
-    case 'rosa':
+    case 'presente':
       return ['#C71585', '#C71585'];
-    case 'verde':
+    case 'outros':
       return ['#006400', '#006400'];
-    case 'roxo':
-      return ['#6A5ACD', '#6A5ACD'];
-    case 'laranja':
-      return ['#FF4500', '#FF4500'];
-    case 'marrom':
-      return ['#5D3C29', '#5D3C29'];
-    case 'cinza':
-      return ['#6E6E6E', '#6E6E6E'];
-    case 'preto':
-      return ['#1C1C1C', '#1C1C1C'];
     default:
-      return ['transparent', 'transparent']; // Cor padrão
+      return ['#FFCF87', '#CA9547']; // Cor padrão
   }
 };
 
@@ -792,6 +774,13 @@ const styles = StyleSheet.create({
   sortOption: {
     fontSize: 16,
     paddingVertical: 10,
+  },
+  circleIcon: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
   },
 });
 

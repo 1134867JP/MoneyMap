@@ -18,13 +18,16 @@ import CustomAlert from '../components/CustomAlert'; // Add this import
 import { wp, hp, scale, verticalScale, moderateScale } from '../utils/dimensions';
 import { supabase } from '../services/supabaseClient';
 
+const formatDateToBR = (date) => {
+  return date.toLocaleDateString('pt-BR');
+};
+
 const AddIncomeScreen = ({ navigation, route }) => {
   const { income, isEditing, title, incomeId, tela, onAddIncome } = route.params || {};
   const [name, setName] = useState(income ? income.name : '');
   const [category, setCategory] = useState(income ? income.category_id : '');
   const [amount, setAmount] = useState(income ? `R$${Math.abs(income.amount).toFixed(2)}` : 'R$0,00');
-  const [incomeDate, setIncomeDate] = useState(income ? new Date(income.income_date) : new Date('2024-12-20'));
-  const [validityDate, setValidityDate] = useState(new Date('2001-12-20'));
+  const [incomeDate, setIncomeDate] = useState(income ? new Date(income.income_date) : new Date());
   const [showIncomeDatePicker, setShowIncomeDatePicker] = useState(false);
   const [showValidityDatePicker, setShowValidityDatePicker] = useState(false);
   const [alertVisible, setAlertVisible] = useState(false); // Add this state
@@ -229,6 +232,7 @@ const AddIncomeScreen = ({ navigation, route }) => {
               style={styles.input}
               value={name}
               onChangeText={setName}
+              placeholder="Nome da Receita"
               placeholderTextColor="#FFFFFF"
             />
           </View>
@@ -271,7 +275,7 @@ const AddIncomeScreen = ({ navigation, route }) => {
             <TouchableOpacity onPress={() => setShowIncomeDatePicker(true)}>
               <TextInput
                 style={styles.input}
-                value={incomeDate.toLocaleDateString()}
+                value={formatDateToBR(incomeDate)}
                 editable={false}
                 placeholderTextColor="#FFFFFF"
               />

@@ -287,17 +287,6 @@ const ExpenseStatementScreen = ({ navigation }) => {
   const minimizedHeight = 200; 
   const maximizedHeight = screenHeight * 0.7;
 
-  const transactions = [
-    { id: '1', category: 'Shopping', amount: -150, date: '15 Mar 2019, 8:20 PM' },
-    { id: '2', category: 'Medicine', amount: -76.8, date: '15 Mar 2019, 12:10 AM' },
-    { id: '3', category: 'Sport', amount: -98.5, date: '15 Mar 2019, 7:20 PM' },
-    { id: '4', category: 'Shopping', amount: -230, date: '5 Mar 2019, 6:20 PM' },
-    { id: '5', category: 'Travel', amount: -299, date: '2 Mar 2019, 6:55 PM' },
-  ];
-
-  const filteredModalTransactions = transactions.filter(transaction =>
-    transaction.category.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   const sortTransactions = (option) => {
     switch (option) {
@@ -309,6 +298,16 @@ const ExpenseStatementScreen = ({ navigation }) => {
       default:
         return filteredModalTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
     }
+  };
+
+  const getCategoryColor = (categoryId) => {
+    const category = categories.find(cat => cat.id === categoryId);
+    return category ? getGradientColors(category.color)[0] : '#FFCF87'; // Default color if not found
+  };
+
+  const formatDateToBrazilian = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('pt-BR');
   };
 
   return (
@@ -426,25 +425,22 @@ const ExpenseStatementScreen = ({ navigation }) => {
                   renderItem={({ item }) => (
                     <TouchableOpacity
                       onPress={() => navigation.navigate('AddExpenseScreen', { expense: item, isEditing: true, fromExpenseStatement: true, expenseId: item.id, tela: 'expenses', onAddExpense: () => {
-                        fetchTotalAmount() && fetchExpenses; // Atualiza os dados da lista
+                        fetchTotalAmount() && fetchExpenses(); // Atualiza os dados da lista
                       } })}
                     >
                       <View style={styles.expenseItem}>
                         <View style={styles.expenseIconContainer}>
-                        <LinearGradient
-                          colors={getGradientColorsCat(item.name)}
-                          style={styles.expenseIcon}
-                        >
-                          <Icon 
-                            name={getCategoryIcon(item.name)} 
-                            size={36} 
-                            color="#FFFFFF" 
-                          />
-                        </LinearGradient>
+                          <View style={[styles.circleIcon, { backgroundColor: getCategoryColor(item.category_id) }]}>
+                            <Icon 
+                              name="attach-money" 
+                              size={24} 
+                              color="#FFFFFF" 
+                            />
+                          </View>
                         </View>
                         <View style={styles.expenseDetails}>
                           <Text style={styles.expenseCategory}>{item.name}</Text>
-                          <Text style={styles.expenseDate}>{item.expense_date}</Text>
+                          <Text style={styles.expenseDate}>{formatDateToBrazilian(item.expense_date)}</Text>
                         </View>
                         <Text style={styles.expenseAmount}>-R${Math.abs(item.amount).toFixed(2)}</Text>
                       </View>
@@ -469,20 +465,17 @@ const ExpenseStatementScreen = ({ navigation }) => {
                   renderItem={({ item }) => (
                     <View style={styles.expenseItem}>
                       <View style={styles.expenseIconContainer}>
-                      <LinearGradient
-                          colors={getGradientColorsCat(item.name)}
-                          style={styles.expenseIcon}
-                        >
+                        <View style={[styles.circleIcon, { backgroundColor: getCategoryColor(item.category_id) }]}>
                           <Icon 
-                            name={getCategoryIcon(item.name)} 
-                            size={36} 
+                            name="attach-money" 
+                            size={24} 
                             color="#FFFFFF" 
                           />
-                        </LinearGradient>
+                        </View>
                       </View>
                       <View style={styles.expenseDetails}>
                         <Text style={styles.expenseCategory}>{item.name}</Text>
-                        <Text style={styles.expenseDate}>{item.expense_date}</Text>
+                        <Text style={styles.expenseDate}>{formatDateToBrazilian(item.expense_date)}</Text>
                       </View>
                       <Text style={styles.expenseAmount}>-R${Math.abs(item.amount).toFixed(2)}</Text>
                     </View>
@@ -560,28 +553,16 @@ const getGradientColors = (category) => {
 
 const getGradientColorsCat = (category) => {
   switch (category.toLowerCase()) {
-    case 'amarelo':
+    case 'shopping':
       return ['#DAA520', '#DAA520'];
-    case 'azul':
+    case 'medicine':
       return ['#0000CD', '#0000CD'];
-    case 'vermelho':
+    case 'sport':
       return ['#8B0000', '#8B0000'];
-    case 'rosa':
+    case 'travel':
       return ['#C71585', '#C71585'];
-    case 'verde':
-      return ['#006400', '#006400'];
-    case 'roxo':
-      return ['#6A5ACD', '#6A5ACD'];
-    case 'laranja':
-      return ['#FF4500', '#FF4500'];
-    case 'marrom':
-      return ['#5D3C29', '#5D3C29'];
-    case 'cinza':
-      return ['#6E6E6E', '#6E6E6E'];
-    case 'preto':
-      return ['#1C1C1C', '#1C1C1C'];
     default:
-      return ['transparent', 'transparent']; // Cor padrão
+      return ['#FFCF87', '#CA9547']; // Cor padrão
   }
 };
 
@@ -777,6 +758,10 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#E5E5E5',
   },
+  expenseIconContainer: {
+    paddingRight: 10,
+
+  },
   expenseDetails: {
     flex: 1,    justifyContent: 'center',  },  expenseCategory: {    fontSize: 16,    color: '#FFFFFF', // Adjusted color  },  expenseDate: {    fontSize: 14,    color: '#FFFFFF', // Adjusted color
     marginTop: 5,
@@ -810,6 +795,14 @@ const styles = StyleSheet.create({
   sortOption: {
     fontSize: 16,
     paddingVertical: 10,
+  },
+  circleIcon: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    
   },
 });
 

@@ -22,22 +22,8 @@ const { width } = Dimensions.get("window");
 
 const HomeScreen = ({ navigation }) => {
   const { userId, userProfile } = userAuth();
-  const [balance, setBalance] = useState(0);
-  const [expenseData, setExpenseData] = useState([
-    { name: "Alimentação", amount: 50, color: "red", legendFontColor: "#7F7F7F", legendFontSize: 15 },
-    { name: "Transporte", amount: 30, color: "blue", legendFontColor: "#7F7F7F", legendFontSize: 15 },
-    { name: "Lazer", amount: 20, color: "green", legendFontColor: "#7F7F7F", legendFontSize: 15 },
-  ]);
   const [fullName, setFullName] = useState('');
   const [profileImage, setProfileImage] = useState("");
-  const [barChartData, setBarChartData] = useState({
-    labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
-    datasets: [
-      {
-        data: [20, 45, 28, 80, 99, 43],
-      },
-    ],
-  });
   const [monthlyData, setMonthlyData] = useState([]);
   const [totalAmount, setTotalAmount] = useState(0);
   const [totalIncomes, setTotalIncomes] = useState(0);
@@ -45,7 +31,6 @@ const HomeScreen = ({ navigation }) => {
 
   const fetchTotalExpenses = async () => {
     try {
-      // Obter o usuário autenticado
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       
       if (userError || !user?.id) {

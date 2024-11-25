@@ -1,48 +1,67 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, SafeAreaView } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { supabase } from '../services/supabaseClient';
+import { userAuth } from '../contexts/userContext';
 
 const NotificationScreen = () => {
-  const notifications = [
-    { id: 1, name: 'Maria Clara', message: 'Maria Clara enviou R$20,00', status: '#20C968' },
-    { id: 2, name: 'Maria Clara', message: 'Maria Clara enviou R$50,00', status: '#F7A700' },
-    { id: 3, name: 'Maria Clara', message: 'Maria Clara enviou R$30,00', status: '#CECECE' },
-    { id: 4, name: 'Maria Clara', message: 'Maria Clara enviou R$25,00', status: '#F7A700' },
-    { id: 5, name: 'Maria Clara', message: 'Maria Clara enviou R$40,00', status: '#20C968' },
-    { id: 6, name: 'Maria Clara', message: 'Maria Clara enviou R$60,00', status: '#CECECE' },
-    { id: 7, name: 'Julio César', message: 'Julio César enviou R$20,00', status: '#F7A700' },
-    { id: 8, name: 'Maria Clara', message: 'Maria Clara enviou R$35,00', status: '#20C968' },
-    { id: 9, name: 'Maria Clara', message: 'Maria Clara enviou R$45,00', status: '#CECECE' },
-    { id: 10, name: 'Maria Clara', message: 'Maria Clara enviou R$55,00', status: '#F7A700' },
-  ];
+  const { userId } = userAuth();
+  const [notifications, setNotifications] = useState([]);
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('notifications')
+          .select('*')
+          .eq('user_id', userId);
+
+        if (error) {
+          console.error('Error fetching notifications:', error);
+        } else {
+          setNotifications(data);
+        }
+      } catch (error) {
+        console.error('Error fetching notifications:', error);
+      }
+    };
+
+    if (userId) {
+      fetchNotifications();
+    }
+  }, [userId]);
 
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>Notificações</Text>
-
       <ScrollView style={styles.scrollView}>
-        {notifications.map((notification, index) => (
-          <View key={notification.id} style={styles.messageContainer}>
-            <View style={styles.messageContent}>
-              <View style={[styles.profileImage, { backgroundColor: notification.status }]}>
-                <View style={[styles.statusDot, { backgroundColor: notification.status }]} />
-              </View>
-              <View style={styles.textContent}>
-                <Text style={styles.name}>{notification.name}</Text>
-                <Text style={styles.message}>{notification.message}</Text>
-              </View>
-              <MaterialIcons 
-                name="chevron-right" 
-                size={24} 
-                color="#224477" 
-                style={styles.arrow}
-              />
-            </View>
-            <View style={styles.separator} />
+        {notifications.length === 0 ? (
+          <View style={styles.noNotificationsContainer}>
+            <Text style={styles.noNotificationsText}>Nenhuma notificação disponível</Text>
           </View>
-        ))}
+        ) : (
+          notifications.map((notification) => (
+            <View key={notification.id} style={styles.messageContainer}>
+              <View style={styles.messageContent}>
+                <View style={[styles.profileImage, { backgroundColor: notification.status }]}>
+                  <View style={[styles.statusDot, { backgroundColor: notification.status }]} />
+                </View>
+                <View style={styles.textContent}>
+                  <Text style={styles.name}>{notification.name}</Text>
+                  <Text style={styles.message}>{notification.message}</Text>
+                </View>
+                <MaterialIcons 
+                  name="chevron-right" 
+                  size={24} 
+                  color="#224477" 
+                  style={styles.arrow}
+                />
+              </View>
+              <View style={styles.separator} />
+            </View>
+          ))
+        )}
       </ScrollView>
-
       <View style={styles.tabBar}>
         <View style={styles.tabBarContent}>
           <MaterialIcons name="account-balance-wallet" size={26} color="#3A3A3A" />
@@ -165,6 +184,16 @@ const styles = StyleSheet.create({
     bottom: 9,
     backgroundColor: '#000000',
     borderRadius: 5,
+  },
+  noNotificationsContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 160,
+  },
+  noNotificationsText: {
+    fontSize: 16,
+    color: '#3A3A3A',
   },
 });
 

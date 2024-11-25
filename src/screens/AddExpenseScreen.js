@@ -25,14 +25,18 @@ import { supabase } from '../services/supabaseClient';
 import { API_KEY } from '../config'; // Import the API key from the config file
 const { width } = Dimensions.get('window');
 
+const formatDateToBR = (date) => {
+  return date.toLocaleDateString('pt-BR');
+};
+
 const AddExpenseScreen = ({ navigation }) => {
   const route = useRoute();
   const { expense, expenseId, tela, onAddExpense } = route.params || {};
   const [name, setName] = useState(expense ? expense.name : '');
   const [category, setCategory] = useState(expense ? expense.category_id : '');
   const [amount, setAmount] = useState(expense ? `R$${Math.abs(expense.amount).toFixed(2)}` : 'R$0,00');
-  const [expenseDate, setExpenseDate] = useState(expense ? new Date(expense.expense_date) : new Date('2024-12-20'));
-  const [validityDate, setValidityDate] = useState(expense ? new Date(expense.validity_date) : new Date('2024-12-20'));
+  const [expenseDate, setExpenseDate] = useState(expense ? new Date(expense.expense_date) : new Date());
+  const [validityDate, setValidityDate] = useState(null);
   const [showExpenseDatePicker, setShowExpenseDatePicker] = useState(false);
   const [showValidityDatePicker, setShowValidityDatePicker] = useState(false);
   const [location, setLocation] = useState(expense ? expense.location : '');
@@ -365,6 +369,7 @@ const AddExpenseScreen = ({ navigation }) => {
               style={styles.input}
               value={name}
               onChangeText={setName}
+              placeholder="Nome da Despesa"
               placeholderTextColor="#FFFFFF"
             />
           </View>
@@ -407,7 +412,7 @@ const AddExpenseScreen = ({ navigation }) => {
             <TouchableOpacity onPress={() => setShowExpenseDatePicker(true)}>
               <TextInput
                 style={styles.input}
-                value={expenseDate.toLocaleDateString()}
+                value={formatDateToBR(expenseDate)}
                 editable={false}
                 placeholderTextColor="#FFFFFF"
               />
@@ -419,8 +424,9 @@ const AddExpenseScreen = ({ navigation }) => {
             <TouchableOpacity onPress={() => setShowValidityDatePicker(true)}>
               <TextInput
                 style={styles.input}
-                value={validityDate.toLocaleDateString()}
+                value={validityDate ? formatDateToBR(validityDate) : ''}
                 editable={false}
+                placeholder="Data de Validade"
                 placeholderTextColor="#FFFFFF"
               />
             </TouchableOpacity>

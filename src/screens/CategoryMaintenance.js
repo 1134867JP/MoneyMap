@@ -189,7 +189,9 @@ const CategoryMaintenance = ({ navigation, route }) => {
           </View>
         </View>
         <ScrollView style={styles.formContainer} contentContainerStyle={styles.scrollContent}>
-          <View style={styles.inputContainer}>
+
+        <View style={styles.inputGroup}>
+            <Text style={styles.label}>Nome da Categoria*</Text>
             <TextInput
               style={styles.input}
               placeholder="Nome da Categoria"
@@ -200,34 +202,27 @@ const CategoryMaintenance = ({ navigation, route }) => {
           </View>
 
           <Text style={styles.label}>Selecione a cor da etiqueta*</Text>
-          <Picker
-            selectedValue={selectedColor}
-            onValueChange={(itemValue) => setSelectedColor(itemValue)}
-            style={styles.picker}
-          >
-            <Picker.Item label="Amarelo" value="Amarelo" />
-            <Picker.Item label="Azul" value="Azul" />
-            <Picker.Item label="Vermelho" value="Vermelho" />
-            <Picker.Item label="Rosa" value="Rosa" />
-            <Picker.Item label="Verde" value="Verde" />
-            <Picker.Item label="Roxo" value="Roxo" />
-            <Picker.Item label="Laranja" value="Laranja" />
-            <Picker.Item label="Marrom" value="Marrom" />
-            <Picker.Item label="Cinza" value="Cinza" />
-            <Picker.Item label="Preto" value="Preto" />
-          </Picker>
+          <View style={styles.inputGroup}>
+            <Picker
+              selectedValue={selectedColor}
+              onValueChange={(itemValue) => setSelectedColor(itemValue)}
+              style={styles.picker}
+            >
+              <Picker.Item label="Amarelo" value="Amarelo" />
+              <Picker.Item label="Azul" value="Azul" />
+              <Picker.Item label="Vermelho" value="Vermelho" />
+              <Picker.Item label="Rosa" value="Rosa" />
+              <Picker.Item label="Verde" value="Verde" />
+              <Picker.Item label="Roxo" value="Roxo" />
+              <Picker.Item label="Laranja" value="Laranja" />
+              <Picker.Item label="Marrom" value="Marrom" />
+              <Picker.Item label="Cinza" value="Cinza" />
+              <Picker.Item label="Preto" value="Preto" />
+            </Picker>
+          </View>
 
         </ScrollView>
         <View style={styles.buttonContainer}>
-          {isAdding && (
-            <CustomButton
-              label="Adicionar Categoria"
-              onPress={saveCategory}
-              style={styles.button}
-              gradientColors={["#4960F9", "#4033FF"]}
-              textStyle={styles.buttonText}
-            />
-          )}
           {!isAdding &&  (
             <TouchableOpacity
               style={styles.deleteButton}
@@ -236,21 +231,19 @@ const CategoryMaintenance = ({ navigation, route }) => {
               <Text style={styles.deleteButtonText}>Excluir</Text>
             </TouchableOpacity>
           )}
-          {!isAdding && (
-            <CustomButton
-              label="Finalizar"
-              onPress={editCategory}
-              style={styles.button}
-              gradientColors={["#4960F9", "#4033FF"]}
-              textStyle={styles.buttonText}
-            />
-          )}
+          <CustomButton
+            label={isAdding ? "Adicionar Categoria" : "Finalizar"}
+            onPress={isAdding ? saveCategory : editCategory}
+            style={styles.customButton} // Ensure this line is present
+            gradientColors={['#FFFFFF', '#FFFFFF']} // Set gradient colors to white
+            textColor="#1937FE" // Set text color to blue for contrast
+            iconColor="#1937FE" // Set icon color to blue for contrast
+          />
         </View>
       </LinearGradient>
       <CustomAlert
         visible={alertVisible}
         title="Sucesso"
-        message={alertMessage}
         onClose={() => {
           setAlertVisible(false);
           navigation.goBack();
@@ -296,13 +289,12 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   input: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: '#CCCCCC',
-    borderRadius: 8,
-    padding: 8,
-    marginRight: 8,
     color: '#FFFFFF',
+    fontSize: moderateScale(14),
+    fontWeight: '700',
+    borderBottomWidth: 1,
+    borderBottomColor: '#FFFFFF',
+    paddingBottom: 8,
   },
   label: {
     color: '#FFFFFF',
@@ -310,6 +302,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   picker: {
+    color: '#FFFFFF',
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 8,
     marginBottom: 16,
@@ -361,7 +354,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: moderateScale(14),
-    color: '#FFFFFF',
+    color: '#000',
   },
   headerTitleContainer: {
     flex: 1,
@@ -374,6 +367,15 @@ const styles = StyleSheet.create({
     fontSize: moderateScale(20),
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  inputGroup: {
+    marginBottom: hp(3),
+  },
+  label: {
+    color: '#B9B9B9',
+    fontSize: scale(14),
+    fontWeight: '700',
+    marginBottom: hp(1),
   },
 });
 
