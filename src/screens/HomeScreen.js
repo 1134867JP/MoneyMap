@@ -244,7 +244,7 @@ const HomeScreen = ({ navigation }) => {
         </View>
       </TouchableOpacity>
 
-      <Text style={styles.greeting}>Bom dia, {fullName}</Text>
+      <Text style={styles.greeting}>Bem vindo, {fullName}</Text>
       <View style={styles.balanceCard}>
         <Text style={styles.balanceTitle}>Suas Finanças</Text>
         <Text style={[styles.balanceAmount, { color: totalAmount < 0 ? 'red' : '#2D99FF' }]}>{`R$ ${totalAmount.toFixed(2)}`}</Text>
