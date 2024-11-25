@@ -65,12 +65,6 @@ const CategoryMaintenance = ({ navigation, route }) => {
         console.log('Categoria salva com sucesso:', data);
         setAlertMessage('Categoria salva com sucesso!');
         setAlertVisible(true);
-  
-        // Redirecionar ou limpar formulário
-        if (onCategoryAdded) {
-          onCategoryAdded();
-        }
-        navigation.goBack();
       }
     } catch (error) {
       console.error('Erro inesperado:', error);
@@ -126,12 +120,6 @@ const CategoryMaintenance = ({ navigation, route }) => {
         console.log('Categoria salva com sucesso:', data);
         setAlertMessage('Categoria salva com sucesso!');
         setAlertVisible(true);
-  
-        // Redirecionar ou limpar formulário
-        if (onCategoryAdded) {
-          onCategoryAdded();
-        }
-        navigation.goBack();
       }
     } catch (error) {
       console.error('Erro inesperado:', error);
@@ -165,7 +153,6 @@ const CategoryMaintenance = ({ navigation, route }) => {
       console.log('Categoria excluída com sucesso:', data);
       setAlertMessage('Categoria excluída com sucesso!');
       setAlertVisible(true);
-      navigation.goBack();
     
     } catch (error) {
       console.error('Erro ao excluir a Categoria:', error.message);
@@ -243,7 +230,8 @@ const CategoryMaintenance = ({ navigation, route }) => {
       </LinearGradient>
       <CustomAlert
         visible={alertVisible}
-        title="Sucesso"
+        title={alertMessage}
+        message=""
         onClose={() => {
           setAlertVisible(false);
           navigation.goBack();

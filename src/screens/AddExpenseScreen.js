@@ -36,7 +36,7 @@ const AddExpenseScreen = ({ navigation }) => {
   const [category, setCategory] = useState(expense ? expense.category_id : '');
   const [amount, setAmount] = useState(expense ? `R$${Math.abs(expense.amount).toFixed(2)}` : 'R$0,00');
   const [expenseDate, setExpenseDate] = useState(expense ? new Date(expense.expense_date) : new Date());
-  const [validityDate, setValidityDate] = useState(null);
+  const [validityDate, setValidityDate] = useState(expense ? new Date(expense.validity_date) : null); // Modify this line
   const [showExpenseDatePicker, setShowExpenseDatePicker] = useState(false);
   const [showValidityDatePicker, setShowValidityDatePicker] = useState(false);
   const [location, setLocation] = useState(expense ? expense.location : '');
@@ -184,9 +184,6 @@ const AddExpenseScreen = ({ navigation }) => {
         console.log('Despesa salva com sucesso:', data);
         setAlertMessage('Despesa salva com sucesso!');
         setAlertVisible(true);
-  
-        // Redirecionar ou limpar formulário
-        navigation.goBack();
       }
     } catch (error) {
       console.error('Erro inesperado:', error);
@@ -212,8 +209,6 @@ const AddExpenseScreen = ({ navigation }) => {
       if (onAddExpense) {
         onAddExpense();
       }
-
-      navigation.goBack();
     
     } catch (error) {
       console.error('Erro ao excluir a despesa:', error.message);
@@ -271,8 +266,6 @@ const AddExpenseScreen = ({ navigation }) => {
         if (onAddExpense) {
           onAddExpense();
         }
-        
-        navigation.goBack();
       }
     } catch (error) {
       console.error('Erro inesperado:', error);
@@ -507,7 +500,7 @@ const AddExpenseScreen = ({ navigation }) => {
 
         {showValidityDatePicker && (
           <DateTimePicker
-            value={validityDate}
+            value={validityDate || new Date()} // Modify this line
             mode="date"
             display="default"
             onChange={(event, selectedDate) => {
@@ -521,7 +514,10 @@ const AddExpenseScreen = ({ navigation }) => {
         visible={alertVisible}
         title={alertMessage}
         message=""
-        onClose={() => setAlertVisible(false)}
+        onClose={() => {
+          setAlertVisible(false);
+          navigation.goBack();
+        }}
       />
     </View>
   );

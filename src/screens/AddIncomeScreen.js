@@ -115,9 +115,6 @@ const AddIncomeScreen = ({ navigation, route }) => {
         console.log('Receita salva com sucesso:', data);
         setAlertMessage('Receita salva com sucesso!');
         setAlertVisible(true);
-  
-        // Redirecionar ou limpar formulário
-        navigation.goBack();
       }
     } catch (error) {
       console.error('Erro inesperado:', error);
@@ -178,7 +175,6 @@ const AddIncomeScreen = ({ navigation, route }) => {
         if (onAddIncome) {
           onAddIncome();
         }
-        navigation.goBack();
       }
     } catch (error) {
       console.error('Erro inesperado:', error);
@@ -204,7 +200,6 @@ const AddIncomeScreen = ({ navigation, route }) => {
       if (onAddIncome) {
         onAddIncome();
       }
-      navigation.goBack();
     
     } catch (error) {
       console.error('Erro ao excluir a receita:', error.message);
@@ -327,7 +322,10 @@ const AddIncomeScreen = ({ navigation, route }) => {
           visible={alertVisible}
           title={alertMessage}
           message=""
-          onClose={() => setAlertVisible(false)}
+          onClose={() => {
+            setAlertVisible(false);
+            navigation.goBack();
+          }}
         />
       </LinearGradient>
     </View>

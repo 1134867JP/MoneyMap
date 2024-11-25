@@ -19,6 +19,7 @@ const MapExpenseScreen = () => {
   const [marker, setMarker] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
+  const [markersLoaded, setMarkersLoaded] = useState(false);
   const navigation = useNavigation();
   const route = useRoute();
   const mapRef = useRef(null);
@@ -38,6 +39,7 @@ const MapExpenseScreen = () => {
         latitudeDelta: 0.0922,
         longitudeDelta: 0.0421,
       });
+      setMarkersLoaded(true);
     };
 
     if (route.params?.location) {
@@ -47,6 +49,7 @@ const MapExpenseScreen = () => {
         latitudeDelta: 0.0922,
         longitudeDelta: 0.0421,
       });
+      setMarkersLoaded(true);
     } else {
       getCurrentLocation();
     }
@@ -67,6 +70,7 @@ const MapExpenseScreen = () => {
         console.log('Navigating to AddExpenseScreen with address:', address);
         navigation.navigate('AddExpenseScreen', { selectedAddress: address });
       }
+      setMarkersLoaded(true);
     } catch (error) {
       console.warn('Error in handleMapPress:', error);
     }
@@ -147,7 +151,7 @@ const MapExpenseScreen = () => {
     }
   };
 
-  if (loading) {
+  if (loading || !markersLoaded) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#0000ff" />

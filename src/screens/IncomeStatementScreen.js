@@ -11,7 +11,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   Modal, // Add Modal import
-  Alert // Add Alert import
+  Alert, // Add Alert import
+  Keyboard // Add Keyboard import
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -34,6 +35,7 @@ const IncomeStatementScreen = ({ navigation }) => {
   const [incomes, setIncomes] = useState([]); // Estado para armazenar as receitas
   const [loading, setLoading] = useState(true); // Estado de carregamento
   const [categories, setCategories] = useState([]);
+  const [keyboardOffset, setKeyboardOffset] = useState(0); // Add state for keyboard offset
 
   const screenHeight = Dimensions.get('window').height;
   const minimizedHeight = 200;
@@ -271,6 +273,20 @@ const IncomeStatementScreen = ({ navigation }) => {
     return date.toLocaleDateString('pt-BR');
   };
 
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', (event) => {
+      setKeyboardOffset(event.endCoordinates.height); // Set keyboard offset when keyboard shows
+    });
+    const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
+      setKeyboardOffset(0); // Reset keyboard offset when keyboard hides
+    });
+
+    return () => {
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    };
+  }, []);
+
   return (
     <View style={styles.container}>
       <LinearGradient
@@ -325,13 +341,18 @@ const IncomeStatementScreen = ({ navigation }) => {
       </LinearGradient>
     </View>
   ))}
+  {categories.length === 0 && (
+    <View style={styles.noCategoryContainer}>
+      <Text style={styles.noCategoryText}>Você ainda não adicionou nenhuma categoria.</Text>
+    </View>
+  )}
 </ScrollView>
 
       <View style={[
         styles.fixedModalContainer,
         { 
           height: modalVisible ? maximizedHeight : minimizedHeight,
-          bottom: 0,
+          bottom: -keyboardOffset, // Change to negative value
         }
       ]}>
         <TouchableOpacity
@@ -372,15 +393,57 @@ const IncomeStatementScreen = ({ navigation }) => {
                     <Icon name="sort" size={24} color="#FFFFFF" style={styles.sortIcon} />
                   </TouchableOpacity>
                 </View>
-                <FlatList
-                  data={incomes}
-                  keyExtractor={item => item.id}
-                  renderItem={({ item }) => (
-                    <TouchableOpacity
-                      onPress={() => navigation.navigate('AddIncomeScreen', { income: item, name: item.name, isEditing: true, title: 'Manutenção de Receita', incomeId: item.id, tela: incomes, onAddIncome: () => {
-                        fetchTotalAmount() && fetchIncomes(); // Atualiza os dados da lista
-                      } })}
-                    >
+                {incomes.length === 0 ? (
+                  <Text style={styles.noDataText}>Nenhuma receita adicionada.</Text>
+                ) : (
+                  <FlatList
+                    data={incomes}
+                    keyExtractor={item => item.id}
+                    renderItem={({ item }) => (
+                      <TouchableOpacity
+                        onPress={() => navigation.navigate('AddIncomeScreen', { income: item, name: item.name, isEditing: true, title: 'Manutenção de Receita', incomeId: item.id, tela: incomes, onAddIncome: () => {
+                          fetchTotalAmount() && fetchIncomes(); // Atualiza os dados da lista
+                        } })}
+                      >
+                        <View style={styles.incomeItem}>
+                          <View style={styles.incomeIconContainer}>
+                            <View style={[styles.circleIcon, { backgroundColor: getCategoryColor(item.category_id) }]}>
+                              <Icon 
+                                name="attach-money" 
+                                size={24} 
+                                color="#FFFFFF" 
+                              />
+                            </View>
+                          </View>
+                          <View style={styles.incomeDetails}>
+                            <Text style={styles.incomeCategory}>{item.name}</Text>
+                            <Text style={styles.incomeDate}>{formatDateToBrazilian(item.income_date)}</Text>
+                          </View>
+                          <Text style={styles.incomeAmount}>R${Math.abs(item.amount).toFixed(2)}</Text>
+                        </View>
+                      </TouchableOpacity>
+                    )}
+                    style={styles.incomeList}
+                    contentContainerStyle={styles.incomeListContent}
+                  />
+                )}
+              </KeyboardAvoidingView>
+            ) : (
+              <>
+                <TouchableOpacity 
+                  style={styles.minimizedContent}
+                  onPress={() => setModalVisible(true)}
+                >
+                  <Icon name="search" size={24} color="#FFFFFF" />
+                  <Text style={styles.minimizedText}>Pesquisar</Text>
+                </TouchableOpacity>
+                {incomes.length === 0 ? (
+                  <Text style={styles.noDataText}>Nenhuma receita adicionada.</Text>
+                ) : (
+                  <FlatList
+                    data={incomes.slice(0, 2)} // Show first 2 transactions
+                    keyExtractor={item => item.id}
+                    renderItem={({ item }) => (
                       <View style={styles.incomeItem}>
                         <View style={styles.incomeIconContainer}>
                           <View style={[styles.circleIcon, { backgroundColor: getCategoryColor(item.category_id) }]}>
@@ -397,45 +460,11 @@ const IncomeStatementScreen = ({ navigation }) => {
                         </View>
                         <Text style={styles.incomeAmount}>R${Math.abs(item.amount).toFixed(2)}</Text>
                       </View>
-                    </TouchableOpacity>
-                  )}
-                  style={styles.incomeList}
-                  contentContainerStyle={styles.incomeListContent}
-                />
-              </KeyboardAvoidingView>
-            ) : (
-              <>
-                <TouchableOpacity 
-                  style={styles.minimizedContent}
-                  onPress={() => setModalVisible(true)}
-                >
-                  <Icon name="search" size={24} color="#FFFFFF" />
-                  <Text style={styles.minimizedText}>Pesquisar</Text>
-                </TouchableOpacity>
-                <FlatList
-                  data={incomes.slice(0, 2)} // Show first 2 transactions
-                  keyExtractor={item => item.id}
-                  renderItem={({ item }) => (
-                    <View style={styles.incomeItem}>
-                      <View style={styles.incomeIconContainer}>
-                        <View style={[styles.circleIcon, { backgroundColor: getCategoryColor(item.category_id) }]}>
-                          <Icon 
-                            name="attach-money" 
-                            size={24} 
-                            color="#FFFFFF" 
-                          />
-                        </View>
-                      </View>
-                      <View style={styles.incomeDetails}>
-                        <Text style={styles.incomeCategory}>{item.name}</Text>
-                        <Text style={styles.incomeDate}>{formatDateToBrazilian(item.income_date)}</Text>
-                      </View>
-                      <Text style={styles.incomeAmount}>R${Math.abs(item.amount).toFixed(2)}</Text>
-                    </View>
-                  )}
-                  style={styles.incomeList}
-                  contentContainerStyle={styles.incomeListContent}
-                />
+                    )}
+                    style={styles.incomeList}
+                    contentContainerStyle={styles.incomeListContent}
+                  />
+                )}
               </>
             )}
           </LinearGradient>
@@ -781,6 +810,23 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
+  },
+  noDataText: {
+    textAlign: 'center',
+    color: '#FFFFFF',
+    marginTop: 20,
+  },
+  noCategoryContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  noCategoryText: {
+    fontSize: 16,
+    color: '#3A3A3A',
+    textAlign: 'center',
+    marginTop: -250,
+    marginLeft: 20,
   },
 });
 

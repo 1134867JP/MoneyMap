@@ -244,7 +244,7 @@ const HomeScreen = ({ navigation }) => {
         </View>
       </TouchableOpacity>
 
-      <Text style={styles.greeting}>Bem vindo, {fullName}</Text>
+      <Text style={styles.greeting}>Bem vindo,{"\n"}{fullName}</Text>
       <View style={styles.balanceCard}>
         <Text style={styles.balanceTitle}>Suas Finanças</Text>
         <Text style={[styles.balanceAmount, { color: totalAmount < 0 ? 'red' : '#2D99FF' }]}>{`R$ ${totalAmount.toFixed(2)}`}</Text>
@@ -368,13 +368,14 @@ const styles = StyleSheet.create({
   },
   greeting: {
     position: "absolute",
-    width: wp('40%'),
+    width: wp('90%'),
     height: hp('6%'),
     left: wp('7%'),
     top: hp('14%'),
     fontSize: moderateScale(20),
     lineHeight: moderateScale(24),
     color: "#FFFFFF",
+    textAlign: 'left',
   },
   balanceCard: {
     position: "absolute",

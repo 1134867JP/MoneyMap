@@ -31,6 +31,14 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "SUPABASE_URL": "https://zzetytnffynuohrerkai.supabase.co",
+      "SUPABASE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp6ZXR5dG5mZnludW9ocmVya2FpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mjk2NDg1NTIsImV4cCI6MjA0NTIyNDU1Mn0.2ycnXZEX-q4Yy5dO8SEjpqVYt7YvHt9AJjNRkwSwQ8M",
+      "API_KEY": "AIzaSyD6IzoG3Agfo3P6b3NPvhaV6aF5JzNbSjM",
+      "eas": {
+        "projectId": "8ca283e7-f2c0-45d1-92d1-acc990891c49"
+      }
     }
   }
 }
