@@ -19,6 +19,7 @@ const MapScreen = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [locations, setLocations] = useState([]);
+  const [selectedMarker, setSelectedMarker] = useState(null);
   const mapRef = useRef(null);
 
   useEffect(() => {
@@ -44,17 +45,44 @@ const MapScreen = () => {
   useEffect(() => {
     const fetchLocations = async () => {
       try {
-        const { data, error } = await supabase
-          .from('locations') // Your Supabase table name
-          .select('id, name, latitude, longitude, rating'); // Fields you need to fetch
+        const { data: expensesData, error: expensesError } = await supabase
+          .from('expenses')
+          .select('id, name, rating, location');
 
-        if (error) {
-          console.error('Error fetching locations:', error);
-        } else {
-          setLocations(data);
+        if (expensesError) {
+          console.error('Error fetching expenses:', expensesError);
+          return;
         }
+
+        console.log('Expenses Data:', expensesData); // Debug expenses data
+
+        const geocodedData = await Promise.all(expensesData.map(async expense => {
+          if (!expense.location) {
+            console.warn(`No location for expense with id ${expense.id}`);
+            return null;
+          }
+
+          try {
+            const geocodeResult = await Geocoder.from(expense.location);
+            const { lat, lng } = geocodeResult.results[0].geometry.location;
+            return {
+              ...expense,
+              latitude: lat,
+              longitude: lng,
+            };
+          } catch (error) {
+            console.error(`Error geocoding location for expense with id ${expense.id}:`, error);
+            return null;
+          }
+        }));
+
+        const combinedData = geocodedData.filter(expense => expense !== null);
+
+        console.log('Combined Data:', combinedData); // Debug combined data
+
+        setLocations(combinedData);
       } catch (error) {
-        console.error('Error fetching locations:', error);
+        console.error('Error fetching data:', error);
       }
     };
 
@@ -65,7 +93,7 @@ const MapScreen = () => {
     if (mapRef.current && region) {
       mapRef.current.animateToRegion(region, 1000);
     }
-  }, [region, locations]);
+  }, [region, locations]);  
 
   const fetchSuggestions = async (query) => {
     try {
@@ -124,6 +152,10 @@ const MapScreen = () => {
     fetchSuggestions(searchQuery);
   };
 
+  const handleMarkerPress = (expense) => {
+    setSelectedMarker(expense);
+  };
+
   const renderStars = (rating) => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
@@ -143,27 +175,43 @@ const MapScreen = () => {
     <View style={styles.container}>
       {region && (
         <MapView
-          ref={mapRef}
-          style={styles.map}
-          region={region}
-          onPress={handleMapPress}
-        >
-          {locations.map(expense => (
+        ref={mapRef}
+        style={styles.map}
+        region={region}
+        onPress={handleMapPress}
+      >
+        {locations.map(expense => {
+          if (!expense.latitude || !expense.longitude) {
+            console.warn(`Invalid coordinates for expense with id ${expense.id}`);
+            return null; // Ensure coordinates are valid
+          }
+          return (
             <Marker
               key={expense.id}
               coordinate={{ latitude: expense.latitude, longitude: expense.longitude }}
+              onPress={() => handleMarkerPress(expense)}
             >
-              <Callout>
-                <View style={styles.callout}>
-                  <Text style={styles.calloutTitle}>{expense.name}</Text>
-                  <View style={styles.calloutRating}>
-                    {renderStars(expense.rating)}
+              <Callout tooltip>
+                <View style={styles.calloutContainer}>
+                  <View style={styles.calloutBubble}>
+                    <Text style={styles.calloutTitle}>{expense.name}</Text>
+                    <View style={styles.calloutRating}>{renderStars(expense.rating)}</View>
                   </View>
+                  <View style={styles.calloutArrow} />
                 </View>
               </Callout>
             </Marker>
-          ))}
-        </MapView>
+          );
+        })}
+      </MapView>
+      )}
+      {selectedMarker && (
+        <View style={styles.tooltip}>
+          <Text style={styles.tooltipTitle}>{selectedMarker.name}</Text>
+          <View style={styles.tooltipRating}>
+            {renderStars(selectedMarker.rating)}
+          </View>
+        </View>
       )}
       <View style={styles.searchContainer}>
         <BackButton style={styles.backButton} color="black" />
@@ -255,9 +303,30 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#EEE',
   },
-  callout: {
-    width: 200, // Aumente a largura do pop-up
-    padding: 10, // Aumente o padding para mais espaço interno
+  calloutContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  calloutBubble: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 6,
+    padding: 15,
+    width: 150,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  calloutArrow: {
+    backgroundColor: 'transparent',
+    borderWidth: 16,
+    borderColor: 'transparent',
+    borderTopColor: '#FFFFFF',
+    alignSelf: 'center',
+    marginTop: -32,
   },
   calloutTitle: {
     fontWeight: 'bold',
@@ -265,6 +334,28 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   calloutRating: {
+    flexDirection: 'row',
+  },
+  tooltip: {
+    position: 'absolute',
+    bottom: 100,
+    left: 10,
+    right: 10,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    padding: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  tooltipTitle: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    marginBottom: 5,
+  },
+  tooltipRating: {
     flexDirection: 'row',
   },
 });
