@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Text, StyleSheet, Dimensions, View } from 'react-native';
 import Svg, { Defs, LinearGradient, Stop, Text as SvgText } from 'react-native-svg'; // Importando SVG para gradiente no texto
 import AuthScreenLayout from '../components/AuthScreenLayout'; 
@@ -7,28 +7,7 @@ import CustomButton from '../components/CustomButton';
 const { width } = Dimensions.get('window');
 
 const LaunchScreen = ({ navigation }) => {
-  const [displayedText, setDisplayedText] = useState('');
-  const fullText = 'MONEYMAP'; // Texto completo
-
-  useEffect(() => {
-    let currentIndex = 0;
-    const typeWriter = () => {
-      if (currentIndex < fullText.length) {
-        setDisplayedText((prev) => prev + fullText[currentIndex]);
-        currentIndex++;
-        setTimeout(typeWriter, 100);
-      } else {
-        setTimeout(() => {
-          setDisplayedText('');
-          currentIndex = 0;
-          setTimeout(typeWriter, 300); // Reinicia o efeito
-        }, 10000); // Pausa antes de reiniciar a animação
-      }
-    };
-
-    const timeoutId = setTimeout(typeWriter, 300);
-    return () => clearTimeout(timeoutId);
-  }, []);
+  const displayedText = 'MONEYMAP'; // Texto completo
 
   return (
     <AuthScreenLayout logoSource={require('../../assets/logo.png')}>

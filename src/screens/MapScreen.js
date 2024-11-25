@@ -191,15 +191,6 @@ const MapScreen = () => {
               coordinate={{ latitude: expense.latitude, longitude: expense.longitude }}
               onPress={() => handleMarkerPress(expense)}
             >
-              <Callout tooltip>
-                <View style={styles.calloutContainer}>
-                  <View style={styles.calloutBubble}>
-                    <Text style={styles.calloutTitle}>{expense.name}</Text>
-                    <View style={styles.calloutRating}>{renderStars(expense.rating)}</View>
-                  </View>
-                  <View style={styles.calloutArrow} />
-                </View>
-              </Callout>
             </Marker>
           );
         })}
