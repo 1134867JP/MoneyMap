@@ -4,26 +4,42 @@ import MapView, { Marker, Callout } from 'react-native-maps';
 import Geocoder from 'react-native-geocoding';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { FontAwesome } from '@expo/vector-icons';
-import BackButton from '../components/BackButton'
+import BackButton from '../components/BackButton';
 import { supabase } from '../services/supabaseClient';
 import { API_KEY } from '../config';
+import * as Location from 'expo-location';
 
 const { width, height } = Dimensions.get('window');
 
 Geocoder.init(API_KEY, { language: 'pt' });
 
 const MapScreen = () => {
-  const [region, setRegion] = useState({
-    latitude: -28.26547829254501,
-    longitude:  -52.39746434586223,
-    latitudeDelta: 0.0922,
-    longitudeDelta: 0.0421,
-  });
+  const [region, setRegion] = useState(null);
   const [marker, setMarker] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [locations, setLocations] = useState([]);
   const mapRef = useRef(null);
+
+  useEffect(() => {
+    const getCurrentLocation = async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permissão negada', 'Permissão para acessar a localização foi negada.');
+        return;
+      }
+
+      let location = await Location.getCurrentPositionAsync({});
+      setRegion({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        latitudeDelta: 0.0922,
+        longitudeDelta: 0.0421,
+      });
+    };
+
+    getCurrentLocation();
+  }, []);
 
   useEffect(() => {
     const fetchLocations = async () => {
@@ -38,7 +54,7 @@ const MapScreen = () => {
           setLocations(data);
         }
       } catch (error) {
-        console.error('Error fetching locarions:', error);
+        console.error('Error fetching locations:', error);
       }
     };
 
@@ -125,29 +141,30 @@ const MapScreen = () => {
 
   return (
     <View style={styles.container}>
-      <MapView
-        ref={mapRef}
-        style={styles.map}
-        region={region}
-        onPress={handleMapPress}
-      >
-        {locations.map(expense => (
-          <Marker
-            key={expense.id}
-            coordinate={{ latitude: expense.latitude, longitude: expense.longitude }}
-          >
-            <Callout>
-              <View style={styles.callout}>
-                <Text style={styles.calloutTitle}>{expense.name}</Text>
-                <View style={styles.calloutRating}>
-                  {renderStars(expense.rating)}
+      {region && (
+        <MapView
+          ref={mapRef}
+          style={styles.map}
+          region={region}
+          onPress={handleMapPress}
+        >
+          {locations.map(expense => (
+            <Marker
+              key={expense.id}
+              coordinate={{ latitude: expense.latitude, longitude: expense.longitude }}
+            >
+              <Callout>
+                <View style={styles.callout}>
+                  <Text style={styles.calloutTitle}>{expense.name}</Text>
+                  <View style={styles.calloutRating}>
+                    {renderStars(expense.rating)}
+                  </View>
                 </View>
-              </View>
-            </Callout>
-          </Marker>
-        ))}
-        {/* Remove marker rendering */}
-      </MapView>
+              </Callout>
+            </Marker>
+          ))}
+        </MapView>
+      )}
       <View style={styles.searchContainer}>
         <BackButton style={styles.backButton} color="black" />
         <TextInput

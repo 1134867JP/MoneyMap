@@ -280,31 +280,26 @@ const AddExpenseScreen = ({ navigation }) => {
   const handleMapPress = async () => {
     let coordinates = { latitude: null, longitude: null };
   
-    if (useCurrentLocation) {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        setAlertMessage('Permissão para acessar a localização foi negada.');
-        setAlertVisible(true);
-        return;
-      }
-  
-      let location = await Location.getCurrentPositionAsync({});
-      coordinates = {
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-      };
-    } else if (location) {
-      const fetchedCoordinates = await getCoordinatesFromAddress(location);
-      if (fetchedCoordinates) {
-        coordinates = fetchedCoordinates;
-      } else {
-        setAlertMessage('Não foi possível obter a localização do endereço fornecido.');
-        setAlertVisible(true);
-        return;
-      }
+    let { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') {
+      setAlertMessage('Permissão para acessar a localização foi negada.');
+      setAlertVisible(true);
+      return;
     }
   
-    navigation.navigate('MapExpenseScreen', { fromAddExpense: true, location: coordinates });
+    let location = await Location.getCurrentPositionAsync({});
+    coordinates = {
+      latitude: location.coords.latitude,
+      longitude: location.coords.longitude,
+    };
+  
+    if (coordinates.latitude && coordinates.longitude) {
+      console.log('Navigating to MapExpenseScreen with coordinates:', coordinates);
+      navigation.navigate('MapExpenseScreen', { fromAddExpense: true, location: coordinates });
+    } else {
+      setAlertMessage('Não foi possível obter a localização.');
+      setAlertVisible(true);
+    }
   };
 
   useEffect(() => {
