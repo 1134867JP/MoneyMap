@@ -65,6 +65,9 @@ const CategoryMaintenance = ({ navigation, route }) => {
         console.log('Categoria salva com sucesso:', data);
         setAlertMessage('Categoria salva com sucesso!');
         setAlertVisible(true);
+        if (onCategoryAdded) {
+          onCategoryAdded(); // Call the callback to update categories
+        }
       }
     } catch (error) {
       console.error('Erro inesperado:', error);
@@ -120,6 +123,9 @@ const CategoryMaintenance = ({ navigation, route }) => {
         console.log('Categoria salva com sucesso:', data);
         setAlertMessage('Categoria salva com sucesso!');
         setAlertVisible(true);
+        if (onCategoryAdded) {
+          onCategoryAdded(); // Call the callback to update categories
+        }
       }
     } catch (error) {
       console.error('Erro inesperado:', error);

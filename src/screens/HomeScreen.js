@@ -13,7 +13,6 @@ import CustomButton from "../components/CustomButton";
 import { PieChart, BarChart } from "react-native-chart-kit";
 import { supabase } from "../services/supabaseClient";
 import { userAuth } from '../contexts/userContext';
-import { Ionicons } from '@expo/vector-icons'; // Add this import
 import { wp, hp, moderateScale } from '../utils/dimensions';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
@@ -116,11 +115,9 @@ const HomeScreen = ({ navigation }) => {
       fetchTotalIncomes();
       const total = totalIncomes - totalExpenses;
       setTotalAmount(total);
-      console.log('Total atualizado:', total);
   
       // Função de limpeza opcional (se necessário)
       return () => {
-        console.log('Tela perdeu o foco');
       };
     }, [totalIncomes, totalExpenses]) // Dependências que podem mudar
   );
@@ -145,8 +142,6 @@ const HomeScreen = ({ navigation }) => {
           .eq("user_id", userId);
         if (incomesError) {
           console.error("Error fetching incomes:", incomesError);
-        } else {
-          console.log("Fetched incomes:", incomes);
         }
 
         const { data: expenses, error: expensesError } = await supabase
@@ -155,8 +150,6 @@ const HomeScreen = ({ navigation }) => {
           .eq("user_id", userId);
         if (expensesError) {
           console.error("Error fetching expenses:", expensesError);
-        } else {
-          console.log("Fetched expenses:", expenses);
         }
 
         const incomeByMonth = {};
@@ -219,6 +212,15 @@ const HomeScreen = ({ navigation }) => {
     }
   }, [userId]);
 
+  useEffect(() => {
+    fetchTotalExpenses();
+    fetchTotalIncomes();
+    setTotalAmount(totalIncomes - totalExpenses);
+    console.log(totalAmount);
+  }, [totalIncomes, totalExpenses]);
+
+  const maxAmount = Math.max(...monthlyData.map(item => item.income + item.expenses), 1); // Ensure maxAmount is at least 1
+
   return (
     <View style={styles.container}>
       <LinearGradient
@@ -251,9 +253,8 @@ const HomeScreen = ({ navigation }) => {
         <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
           <View style={styles.columns}>
             {monthlyData.map((item, index) => {
-              const totalAmount = item.income + item.expenses;
-              const incomeHeight = totalAmount ? (item.income / totalAmount) * hp("20%") : 0;
-              const expensesHeight = totalAmount ? (item.expenses / totalAmount) * hp("20%") : 0;
+              const incomeHeight = (item.income / maxAmount) * hp("20%");
+              const expensesHeight = (item.expenses / maxAmount) * hp("20%");
               return (
                 <View key={index} style={styles.monthColumn}>
                   <View style={styles.barsContainer}>
